@@ -2,8 +2,8 @@ local set = vim.opt
 set.number = true -- Show current line number
 set.relativenumber = true -- Show relative line numbers
 
-set.tabstop = 4 -- Tab equals 4 spaces
-set.shiftwidth = 4 -- Indent by 4 spaces
+set.tabstop = 2 -- Tab equals 2 spaces (match VS Code / Prettier)
+set.shiftwidth = 2 -- Indent by 2 spaces
 set.autoindent = true -- Preserve indentation on new lines
 set.expandtab = true -- Convert tabs to spaces
 
@@ -26,11 +26,11 @@ set.splitright = true -- Vertical splits open right
 
 set.iskeyword:append("-") -- Treat hyphenated words as one word
 
-set.scrolloff = 8 -- Keep 8 lines around cursor
+set.scrolloff = 5 -- Keep 5 lines around cursor (match VS Code)
 
 set.swapfile = false -- Disable swap files
 set.backup = false -- Disable backup files
-set.undodir = os.getenv("HOME") .. "/.vim/undodir" -- Undo file location
+set.undodir = vim.fn.stdpath("data") .. "/undodir" -- Undo file location (cross-platform)
 set.undofile = true -- Enable persistent undo
 
 set.incsearch = true -- Search while typing

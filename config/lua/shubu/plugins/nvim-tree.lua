@@ -8,7 +8,24 @@ return {
     vim.g.loaded_netrw = 1
     vim.g.loaded_netrwPlugin = 1
 
+    -- custom keymaps inside the tree (override built-in s = system_open, S = search)
+    local function on_attach(bufnr)
+      local api = require("nvim-tree.api")
+
+      local function opts(desc)
+        return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+      end
+
+      -- keep all the default mappings first
+      api.config.mappings.default_on_attach(bufnr)
+
+      -- VS Code-style splits: s = vertical (side), S = horizontal (below)
+      vim.keymap.set("n", "s", api.node.open.vertical, opts("Open: Vertical Split"))
+      vim.keymap.set("n", "S", api.node.open.horizontal, opts("Open: Horizontal Split"))
+    end
+
     nvimtree.setup({
+      on_attach = on_attach,
       view = {
         width = 35,
         relativenumber = true,
