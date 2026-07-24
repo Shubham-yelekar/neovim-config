@@ -46,4 +46,4 @@ vim.keymap.set("n", "<leader>li", "<cmd>checkhealth vim.lsp<CR>") -- Check LSP h
 
 vim.keymap.set("n", "<leader>mm", "<cmd>make<CR>") -- Run make in current project
 
-vim.keymap.set("n", "<leader><leader>", "<cmd>source %<CR>") -- Reload current file
+vim.keymap.set("n", "<leader><leader>", "<cmd>Telescope find_files<CR>") -- Quick Open (fuzzy file search, matches VS Code)

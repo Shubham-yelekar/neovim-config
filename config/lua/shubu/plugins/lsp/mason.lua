@@ -26,24 +26,23 @@ return {
 		mason_lspconfig.setup({
 			-- list of servers for mason to install
 			ensure_installed = {
-				"ts_ls",
+				"ts_ls", -- TypeScript / JavaScript (React, Next.js)
+				"angularls", -- Angular language server (14+)
 				"html",
 				"cssls",
-				"tailwindcss",
-				"svelte",
-				"lua_ls",
-				"graphql",
+				"tailwindcss", -- Tailwind class completion
 				"emmet_ls",
-				"prismals",
-				"pyright",
+				"lua_ls", -- for editing this Neovim config
+				"pyright", -- Python
 			},
-			mason_tool_installer.setup({
-				ensure_installed = {
-					"prettier", -- prettier formatter
-					"stylua", --lua formatter
-					"eslint_d", -- js linter --
-				},
-			}),
+		})
+
+		mason_tool_installer.setup({
+			ensure_installed = {
+				"prettier", -- prettier formatter
+				"stylua", --lua formatter
+				"eslint_d", -- js linter --
+			},
 		})
 	end,
 }
