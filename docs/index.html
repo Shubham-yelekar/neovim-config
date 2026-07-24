@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neovim Config Docs — shubu</title>
+<meta name="description" content="Personal reference for my Neovim configuration: every plugin, keymap, and option explained." />
+<style>
+  /* ---------- Catppuccin palette (Mocha = dark, Latte = light) ---------- */
+  :root[data-theme="dark"]{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b; --surface0:#313244;
+    --surface1:#45475a; --surface2:#585b70; --text:#cdd6f4; --subtext:#a6adc8;
+    --overlay:#6c7086; --blue:#89b4fa; --lavender:#b4befe; --sapphire:#74c7ec;
+    --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387; --red:#f38ba8;
+    --mauve:#cba6f7; --pink:#f5c2e7; --teal:#94e2d5;
+    --shadow: rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --base:#eff1f5; --mantle:#e6e9ef; --crust:#dce0e8; --surface0:#ccd0da;
+    --surface1:#bcc0cc; --surface2:#acb0be; --text:#4c4f69; --subtext:#5c5f77;
+    --overlay:#8c8fa1; --blue:#1e66f5; --lavender:#7287fd; --sapphire:#209fb5;
+    --green:#40a02b; --yellow:#df8e1d; --peach:#fe640b; --red:#d20f39;
+    --mauve:#8839ef; --pink:#ea76cb; --teal:#179299;
+    --shadow: rgba(0,0,0,.15);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--base);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.65;font-size:15px;
+  }
+  code,pre,kbd,.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- Layout ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;gap:16px;
+    padding:0 20px;background:var(--mantle);border-bottom:1px solid var(--surface0);
+  }
+  .topbar .brand{font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;white-space:nowrap}
+  .topbar .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .grow{flex:1}
+  .search-btn{
+    display:flex;align-items:center;gap:10px;background:var(--base);border:1px solid var(--surface1);
+    color:var(--subtext);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;min-width:210px;
+  }
+  .search-btn:hover{border-color:var(--overlay)}
+  .search-btn .kbd{margin-left:auto}
+  .kbd,kbd{
+    font-size:11px;background:var(--surface0);border:1px solid var(--surface1);border-bottom-width:2px;
+    border-radius:5px;padding:1px 6px;color:var(--subtext);white-space:nowrap
+  }
+  .icon-btn{background:none;border:1px solid var(--surface1);color:var(--text);border-radius:8px;width:36px;height:34px;cursor:pointer;font-size:15px}
+  .icon-btn:hover{border-color:var(--overlay)}
+
+  .shell{display:flex;max-width:1400px;margin:0 auto}
+  .sidebar{
+    width:270px;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);
+    overflow-y:auto;padding:22px 12px 60px;border-right:1px solid var(--surface0);
+  }
+  .sidebar::-webkit-scrollbar{width:8px}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--surface1);border-radius:8px}
+  .side-group{margin-bottom:20px}
+  .side-group > .label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--overlay);
+    font-weight:700;padding:0 12px;margin-bottom:6px
+  }
+  .side-link{
+    display:flex;align-items:center;gap:9px;padding:6px 12px;border-radius:7px;color:var(--subtext);
+    font-size:13.5px;cursor:pointer
+  }
+  .side-link:hover{background:var(--surface0);color:var(--text);text-decoration:none}
+  .side-link.active{background:var(--surface0);color:var(--lavender);font-weight:600}
+  .side-link .tag{margin-left:auto;font-size:10px;color:var(--overlay)}
+
+  .content{flex:1;min-width:0;padding:34px 44px 120px;max-width:920px}
+  section.doc{margin-bottom:52px;scroll-margin-top:72px}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px}
+  h2.sec-title{font-size:23px;font-weight:750;margin:0 0 4px;letter-spacing:-.3px;display:flex;align-items:center;gap:11px}
+  h3{font-size:16px;font-weight:700;margin:22px 0 8px;color:var(--text)}
+  p{margin:10px 0;color:var(--subtext)}
+  .lead{font-size:16px;color:var(--text)}
+  ul,ol{margin:10px 0 10px 22px}
+  li{margin:5px 0;color:var(--subtext)}
+  strong{color:var(--text);font-weight:650}
+  .hr{height:1px;background:var(--surface0);border:0;margin:40px 0}
+
+  /* code */
+  pre{
+    background:var(--crust);border:1px solid var(--surface0);border-radius:10px;padding:15px 17px;
+    overflow-x:auto;margin:14px 0;font-size:13px;line-height:1.6
+  }
+  pre code{color:var(--text);white-space:pre}
+  :not(pre) > code{
+    background:var(--surface0);color:var(--peach);padding:1.5px 6px;border-radius:5px;font-size:12.5px
+  }
+
+  /* plugin card header */
+  .plugin-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .plugin-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 4px}
+  .badge{font-size:11px;padding:2.5px 9px;border-radius:20px;font-weight:600;border:1px solid transparent}
+  .badge.repo{background:var(--surface0);color:var(--blue);border-color:var(--surface1)}
+  .badge.ver{background:transparent;color:var(--overlay);border-color:var(--surface1);font-family:"JetBrains Mono",monospace}
+  .badge.cat{background:transparent;border-color:var(--surface1);color:var(--subtext)}
+  .tagline{color:var(--text);font-size:15px;margin:2px 0 0}
+
+  /* keymap table */
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--surface0);vertical-align:top}
+  th{color:var(--overlay);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+  td.keys{white-space:nowrap;width:1%}
+  tr.km-row:target,tr.km-row.flash{background:var(--surface0)}
+  .mode-pill{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface0);color:var(--subtext);margin-right:3px}
+
+  .note{border-left:3px solid var(--yellow);background:color-mix(in srgb,var(--yellow) 9%,transparent);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .note.warn{border-color:var(--red);background:color-mix(in srgb,var(--red) 9%,transparent)}
+  .note.tip{border-color:var(--green);background:color-mix(in srgb,var(--green) 9%,transparent)}
+  .note strong{color:var(--text)}
+
+  /* ---------- Cmd+K palette ---------- */
+  .palette-overlay{
+    position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);
+    display:none;align-items:flex-start;justify-content:center;padding-top:12vh
+  }
+  .palette-overlay.open{display:flex}
+  .palette{
+    width:min(640px,92vw);background:var(--mantle);border:1px solid var(--surface1);
+    border-radius:14px;box-shadow:0 24px 60px var(--shadow);overflow:hidden
+  }
+  .palette input{
+    width:100%;border:0;outline:0;background:transparent;color:var(--text);
+    font-size:16px;padding:18px 20px;border-bottom:1px solid var(--surface0)
+  }
+  .palette input::placeholder{color:var(--overlay)}
+  .results{max-height:56vh;overflow-y:auto;padding:8px}
+  .results::-webkit-scrollbar{width:9px}
+  .results::-webkit-scrollbar-thumb{background:var(--surface1);border-radius:8px}
+  .res{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;cursor:pointer
+  }
+  .res.sel{background:var(--surface0)}
+  .res .type{font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:5px;flex-shrink:0;font-weight:700}
+  .res .type.Plugin{background:color-mix(in srgb,var(--blue) 20%,transparent);color:var(--blue)}
+  .res .type.Keymap{background:color-mix(in srgb,var(--green) 20%,transparent);color:var(--green)}
+  .res .type.Guide{background:color-mix(in srgb,var(--mauve) 20%,transparent);color:var(--mauve)}
+  .res .rtitle{font-size:14px;color:var(--text);font-weight:600}
+  .res .rtitle.mono{font-family:"JetBrains Mono",monospace;font-size:13px}
+  .res .rsub{font-size:12px;color:var(--overlay);margin-left:auto;text-align:right;flex-shrink:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .res mark{background:transparent;color:var(--yellow);font-weight:700}
+  .palette-foot{display:flex;gap:16px;padding:9px 16px;border-top:1px solid var(--surface0);font-size:11px;color:var(--overlay)}
+  .palette-foot span{display:flex;align-items:center;gap:6px}
+  .empty{padding:26px;text-align:center;color:var(--overlay);font-size:14px}
+
+  .mobile-menu{display:none}
+  @media (max-width:860px){
+    .sidebar{position:fixed;left:0;top:56px;z-index:40;background:var(--mantle);transform:translateX(-100%);transition:transform .2s;box-shadow:8px 0 30px var(--shadow)}
+    .sidebar.open{transform:translateX(0)}
+    .content{padding:26px 20px 100px}
+    .search-btn{min-width:0}.search-btn .placeholder{display:none}
+    .mobile-menu{display:block}
+    .topbar .brand span.full{display:none}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Menu">☰</button>
+    <div class="brand"><span class="dot"></span> <span class="full">Neovim Config&nbsp;·&nbsp;</span>shubu</div>
+    <div class="grow"></div>
+    <button class="search-btn" id="searchBtn">
+      <span>🔍</span><span class="placeholder">Search topics…</span>
+      <span class="kbd" id="kbdHint">Ctrl K</span>
+    </button>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">🌙</button>
+  </div>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="content" id="content"></main>
+  </div>
+
+  <!-- Cmd+K palette -->
+  <div class="palette-overlay" id="paletteOverlay">
+    <div class="palette" role="dialog" aria-modal="true">
+      <input id="paletteInput" type="text" placeholder="Search plugins, keymaps, guides…" autocomplete="off" spellcheck="false" />
+      <div class="results" id="results"></div>
+      <div class="palette-foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> open</span>
+        <span><kbd>esc</kbd> close</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   DATA MODEL — everything renders from these three arrays
+   ============================================================ */
+
+const GUIDES = [
+  {
+    id: "overview", title: "Overview", nav: "Overview",
+    html: `
+      <p class="lead">This is a living reference for my personal Neovim setup. I use Neovim to get comfortable with the command line, git, and Vim motions — this site explains <strong>what every piece does</strong> so I can actually understand my config instead of copy-pasting it.</p>
+      <p>Everything here is generated from the real config files in the <code>config/</code> folder of this repo. Each plugin lists what it does, its repo, the exact locked commit, its keymaps, and a code snippet.</p>
+      <h3>The stack it's built for</h3>
+      <ul>
+        <li><strong>Frontend:</strong> React, Next.js, Tailwind, Angular (14+)</li>
+        <li><strong>Editor base:</strong> Neovim 0.12+, plugins managed by <a href="https://github.com/folke/lazy.nvim" target="_blank">lazy.nvim</a></li>
+        <li><strong>Leader key:</strong> <kbd>Space</kbd> — most custom shortcuts start with it</li>
+      </ul>
+      <div class="note tip"><strong>Tip:</strong> Press <span class="kbd">Ctrl K</span> (or <span class="kbd">⌘ K</span> on Mac) anywhere to fuzzy-search every plugin, keymap and topic.</div>
+    `
+  },
+  {
+    id: "structure", title: "How the config is structured", nav: "Project structure",
+    html: `
+      <p>Neovim loads a single entry file, which pulls in everything else. The folders are split so each concern lives on its own.</p>
+      <pre><code>config/                      &larr; junctioned to ~/AppData/Local/nvim (Win) or ~/.config/nvim (Mac)
+├── init.lua                 &larr; the entry point Neovim runs first
+└── lua/shubu/
+    ├── core/
+    │   ├── init.lua         &larr; loads options + keymaps
+    │   ├── options.lua      &larr; editor settings (tabs, numbers, clipboard…)
+    │   └── keymaps.lua      &larr; global key shortcuts
+    ├── lazy.lua             &larr; bootstraps the lazy.nvim plugin manager
+    └── plugins/             &larr; ONE file per plugin (auto-imported)
+        ├── telescope.lua
+        ├── nvim-tree.lua
+        └── lsp/
+            ├── lsp-config.lua
+            └── mason.lua</code></pre>
+      <h3>The load order</h3>
+      <ol>
+        <li><code>init.lua</code> &rarr; <code>require("shubu.core")</code> then <code>require("shubu.lazy")</code></li>
+        <li><code>core/init.lua</code> loads <code>options.lua</code> (settings) and <code>keymaps.lua</code> (shortcuts)</li>
+        <li><code>lazy.lua</code> starts lazy.nvim, which imports <em>every file</em> in <code>plugins/</code> and <code>plugins/lsp/</code></li>
+        <li>Each plugin file <code>return</code>s a table describing the plugin — lazy.nvim reads it and installs/loads it</li>
+      </ol>
+      <p>That "one file per plugin, auto-imported" pattern is why adding a plugin is just dropping a new <code>.lua</code> file in <code>plugins/</code>.</p>
+    `
+  },
+  {
+    id: "lua-basics", title: "Lua & lazy.nvim in 5 minutes", nav: "Lua basics",
+    html: `
+      <p>You don't need to know Lua deeply. Almost every plugin file follows the same shape. Here's the whole vocabulary you need to read this config.</p>
+      <h3>1. A file returns a "table"</h3>
+      <p>A <strong>table</strong> <code>{ }</code> is Lua's everything — it's a list <em>and</em> a dictionary. A plugin file just returns one describing the plugin:</p>
+      <pre><code>return {
+  "owner/repo",            -- which plugin (GitHub shorthand)
+  event = "BufReadPre",    -- WHEN to load it (lazy-loading)
+  dependencies = { ... },  -- other plugins it needs
+  opts = { ... },          -- options passed to the plugin
+  config = function() ... end, -- code that runs to set it up
+}</code></pre>
+      <h3>2. The lazy.nvim spec fields</h3>
+      <ul>
+        <li><code>"owner/repo"</code> — the GitHub repo, first item in the table</li>
+        <li><code>event</code> — load the plugin only when this happens (e.g. <code>"InsertEnter"</code>, <code>"BufReadPre"</code>). This keeps startup fast.</li>
+        <li><code>cmd</code> — load when a command is first run (e.g. <code>"Trouble"</code>)</li>
+        <li><code>keys</code> — load when a key is first pressed</li>
+        <li><code>dependencies</code> — plugins to install first</li>
+        <li><code>opts</code> — a table handed to the plugin's <code>setup()</code> automatically</li>
+        <li><code>config = function() … end</code> — a function that runs to configure things manually</li>
+      </ul>
+      <div class="note"><strong>opts vs config:</strong> <code>opts = {…}</code> is shorthand — lazy.nvim calls <code>require("plugin").setup(opts)</code> for you. <code>config = function()</code> is the long form where you write that call (and anything else) yourself.</div>
+      <h3>3. Setting a keymap</h3>
+      <pre><code>vim.keymap.set("n", "&lt;leader&gt;ff", "&lt;cmd&gt;Telescope find_files&lt;CR&gt;", { desc = "Find files" })
+--            mode  keys        action to run                     options
+</code></pre>
+      <ul>
+        <li><code>"n"</code> = normal mode, <code>"i"</code> = insert, <code>"v"</code>/<code>"x"</code> = visual</li>
+        <li><code>&lt;leader&gt;</code> = the Space key here</li>
+        <li><code>&lt;cmd&gt;…&lt;CR&gt;</code> = run an Ex command as if typed with Enter</li>
+      </ul>
+      <h3>4. <code>require</code> and <code>vim</code></h3>
+      <p><code>require("x")</code> loads a Lua module and gives you its table. <code>vim</code> is the global Neovim gives you — <code>vim.opt</code> for settings, <code>vim.keymap</code> for maps, <code>vim.api</code> for low-level calls.</p>
+    `
+  },
+  {
+    id: "options", title: "Editor options explained", nav: "Editor options",
+    html: `
+      <p>These come from <code>core/options.lua</code>. <code>vim.opt</code> (aliased to <code>set</code>) changes a built-in Neovim setting.</p>
+      <table>
+        <tr><th>Setting</th><th>Value</th><th>What it does</th></tr>
+        <tr><td class="mono">number</td><td class="mono">true</td><td>Show the current line number</td></tr>
+        <tr><td class="mono">relativenumber</td><td class="mono">true</td><td>Other lines show distance from cursor — makes <code>5j</code>/<code>3k</code> jumps easy</td></tr>
+        <tr><td class="mono">tabstop / shiftwidth</td><td class="mono">2</td><td>A tab = 2 spaces (matches Prettier / your VS Code)</td></tr>
+        <tr><td class="mono">expandtab</td><td class="mono">true</td><td>Insert spaces instead of real tab characters</td></tr>
+        <tr><td class="mono">autoindent</td><td class="mono">true</td><td>Keep the previous line's indent on a new line</td></tr>
+        <tr><td class="mono">ignorecase + smartcase</td><td class="mono">true</td><td>Search is case-insensitive, unless you type a capital</td></tr>
+        <tr><td class="mono">termguicolors</td><td class="mono">true</td><td>Enable 24-bit color (needed for themes)</td></tr>
+        <tr><td class="mono">cursorline</td><td class="mono">true</td><td>Highlight the line the cursor is on</td></tr>
+        <tr><td class="mono">colorcolumn</td><td class="mono">"80"</td><td>Draw a guide bar at column 80</td></tr>
+        <tr><td class="mono">signcolumn</td><td class="mono">"yes"</td><td>Always show the left gutter (git/diagnostic signs) so text doesn't jump</td></tr>
+        <tr><td class="mono">clipboard</td><td class="mono">unnamedplus</td><td>Yanks/deletes use the system clipboard</td></tr>
+        <tr><td class="mono">scrolloff</td><td class="mono">5</td><td>Keep 5 lines visible above/below the cursor</td></tr>
+        <tr><td class="mono">swapfile / backup</td><td class="mono">false</td><td>No <code>.swp</code>/backup files</td></tr>
+        <tr><td class="mono">undofile</td><td class="mono">true</td><td>Persist undo history to disk (in <code>stdpath("data")/undodir</code>) — undo survives restarts</td></tr>
+        <tr><td class="mono">updatetime</td><td class="mono">50</td><td>Faster diagnostics / plugin refresh (ms)</td></tr>
+        <tr><td class="mono">wrap + linebreak + breakindent</td><td class="mono">true</td><td>Wrap long lines at word boundaries, keeping indent</td></tr>
+        <tr><td class="mono">splitbelow / splitright</td><td class="mono">true</td><td>New splits open below and to the right</td></tr>
+      </table>
+      <p>The file also maps <code>j</code>/<code>k</code> to <code>gj</code>/<code>gk</code> so moving down/up steps through <em>wrapped</em> visual lines, not just real lines.</p>
+    `
+  }
+];
+
+// ---- Plugins (grouped by category, order preserved) ----
+const CAT = {
+  START:"Getting Started", UI:"UI & Appearance", EDIT:"Editing",
+  NAV:"Navigation & Search", LSP:"LSP & Completion", FMT:"Format & Lint",
+  GIT:"Git", DIAG:"Diagnostics", CORE:"Core"
+};
+
+const PLUGINS = [
+  // ---------------- Navigation & Search ----------------
+  { id:"telescope", name:"telescope.nvim", repo:"nvim-telescope/telescope.nvim", commit:"427b576", cat:CAT.NAV,
+    tagline:"Fuzzy finder for files, text, buffers, and just about everything.",
+    keywords:"find files live grep search fuzzy picker",
+    body:`<p>Telescope is the central "find anything" tool. It opens a floating picker where you type to fuzzy-filter results with a live preview. It powers file search, project-wide text search (grep), buffer switching, and even the LSP "go to references" lists.</p>
+      <p>Your setup adds two extensions: <strong>fzf-native</strong> (a compiled C sorter for much faster matching — needs <code>make</code>) and <strong>ui-select</strong> (routes Neovim's selection menus through Telescope). Inside a picker, <code>Ctrl-j</code>/<code>Ctrl-k</code> move the selection.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;&lt;leader&gt;","Quick Open — find files (custom)"],
+      ["&lt;leader&gt;ff","Find files"],["&lt;leader&gt;fg","Live grep (search text in project)"],
+      ["&lt;leader&gt;fb","Open buffers"],["&lt;leader&gt;fw","Grep word under cursor"],
+      ["&lt;leader&gt;fd","Diagnostics"],["&lt;leader&gt;fr","Resume last search"],
+      ["&lt;leader&gt;f.","Recent files"],["&lt;leader&gt;f/","Fuzzy find in current buffer"],
+      ["&lt;leader&gt;fh","Help tags"],["&lt;leader&gt;fn","Neovim config files"]
+    ],
+    code:`vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
+vim.keymap.set("n", "<leader>fg", builtin.live_grep,  { desc = "Live grep" })
+-- inside a picker: Ctrl-j / Ctrl-k move the selection` },
+
+  { id:"harpoon", name:"harpoon", repo:"ThePrimeagen/harpoon", commit:"87b1a35 (harpoon2)", cat:CAT.NAV,
+    tagline:"Pin your 3–4 most-used files and jump between them instantly.",
+    keywords:"marks bookmarks quick file switch jump",
+    body:`<p>Harpoon fixes the "I keep switching between the same 4 files" problem. You <em>add</em> a file to a short list, then jump straight to slot 1/2/3/4 — no fuzzy searching, no scrolling. Think of it as manual, permanent bookmarks for the current project.</p>
+      <p>This is the same tool you use in VS Code; the keymaps here mirror it.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;a","Add current file to Harpoon"],
+      ["&lt;leader&gt;h","Open the Harpoon quick menu"],
+      ["&lt;leader&gt;1 … 4","Jump to Harpoon file 1–4"]
+    ],
+    code:`local harpoon = require("harpoon")
+harpoon:setup()
+vim.keymap.set("n", "<leader>a", function() harpoon:list():add() end)
+vim.keymap.set("n", "<leader>h", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)` },
+
+  { id:"nvim-tree", name:"nvim-tree.lua", repo:"nvim-tree/nvim-tree.lua", commit:"4213bd6", cat:CAT.NAV,
+    tagline:"A file explorer sidebar with git status and split-open.",
+    keywords:"file explorer tree sidebar files",
+    body:`<p>The left-hand file tree. It shows git status per file (the <code>✗</code> = unstaged, <code>★</code> = untracked marks), and lets you create/rename/delete files without leaving Neovim.</p>
+      <p>Custom split keys were added so files open the way they do in your VS Code explorer.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;ee","Toggle the file explorer"],
+      ["&lt;leader&gt;ef","Toggle, focused on the current file"],
+      ["&lt;leader&gt;ec","Collapse the tree"],["&lt;leader&gt;er","Refresh the tree"],
+      ["s <span class='mode-pill'>in tree</span>","Open file in a vertical split (custom)"],
+      ["S <span class='mode-pill'>in tree</span>","Open file in a horizontal split (custom)"],
+      ["&lt;CR&gt; / o","Open file · a: new file · r: rename · d: delete"]
+    ],
+    code:`-- override built-in s (system open) & S (search) with splits:
+vim.keymap.set("n", "s", api.node.open.vertical,   opts("Vertical Split"))
+vim.keymap.set("n", "S", api.node.open.horizontal, opts("Horizontal Split"))` },
+
+  // ---------------- LSP & Completion ----------------
+  { id:"mason", name:"mason.nvim", repo:"williamboman/mason.nvim", commit:"2a6940a", cat:CAT.LSP,
+    tagline:"Installs and manages language servers, formatters & linters.",
+    keywords:"install lsp server formatter linter package manager",
+    body:`<p>Mason is a package manager <em>inside</em> Neovim for developer tools — language servers, formatters, linters. Run <code>:Mason</code> to see a UI of everything installed.</p>
+      <p>Two companions: <strong>mason-lspconfig</strong> bridges Mason with nvim-lspconfig and auto-enables your servers; <strong>mason-tool-installer</strong> makes sure a list of tools (here: prettier, stylua, eslint_d) is always installed. Your <code>ensure_installed</code> list: <code>ts_ls, angularls, html, cssls, tailwindcss, emmet_ls, lua_ls, pyright</code>.</p>`,
+    keymaps:[[":Mason","Open the Mason UI"]],
+    code:`mason_lspconfig.setup({
+  ensure_installed = {
+    "ts_ls", "angularls", "html", "cssls",
+    "tailwindcss", "emmet_ls", "lua_ls", "pyright",
+  },
+})` },
+
+  { id:"lspconfig", name:"nvim-lspconfig", repo:"neovim/nvim-lspconfig", commit:"d592c1e", cat:CAT.LSP,
+    tagline:"Wires up language servers — go-to-definition, hover, rename, diagnostics.",
+    keywords:"lsp language server definition references hover rename diagnostics",
+    body:`<p>This connects Neovim to language servers (TypeScript, Angular, Lua, etc.), giving you IDE features: jump to definition, find references, hover docs, rename, code actions, and inline errors.</p>
+      <p>Uses the modern <code>vim.lsp.config()</code> API (Neovim 0.11+). A default config applies completion capabilities to every server, with per-server tweaks for <code>emmet_ls</code> and <code>lua_ls</code>. It also runs <strong>organize-imports on save</strong> for JS/TS (adds missing + sorts imports, but keeps unused ones). The keymaps below activate only when a language server attaches to the buffer.</p>`,
+    keymaps:[
+      ["gd","Go to definition"],["gD","Go to declaration"],
+      ["gR","Show references"],["gi","Go to implementation"],["gt","Go to type definition"],
+      ["K","Hover documentation"],["&lt;leader&gt;ca","Code actions"],["&lt;leader&gt;rn","Rename symbol"],
+      ["&lt;leader&gt;D","Buffer diagnostics"],["&lt;leader&gt;d","Line diagnostic (float)"],
+      ["[d / ]d","Previous / next diagnostic"],["&lt;leader&gt;rs","Restart LSP"]
+    ],
+    code:`vim.lsp.config("*", { capabilities = capabilities })   -- applies to every server
+vim.lsp.config("lua_ls", { settings = { Lua = {
+  diagnostics = { globals = { "vim" } },
+}}})` },
+
+  { id:"nvim-cmp", name:"nvim-cmp", repo:"hrsh7th/nvim-cmp", commit:"2ffe79f", cat:CAT.LSP,
+    tagline:"The autocompletion popup as you type.",
+    keywords:"completion autocomplete popup snippets suggestions",
+    body:`<p>The dropdown of suggestions while typing. It pulls from several <strong>sources</strong>: the language server (<code>nvim_lsp</code>), snippets (<code>luasnip</code>), words in the current buffer, and file paths. <strong>lspkind</strong> adds the little VS Code-style icons; <strong>friendly-snippets</strong> provides ready-made snippets.</p>`,
+    keymaps:[
+      ["&lt;C-j&gt; / &lt;C-k&gt;","Next / previous suggestion"],
+      ["&lt;C-Space&gt;","Trigger completion"],
+      ["&lt;CR&gt;","Confirm selection"],
+      ["&lt;C-b&gt; / &lt;C-f&gt;","Scroll docs"],["&lt;C-e&gt;","Close the menu"]
+    ],
+    code:`mapping = cmp.mapping.preset.insert({
+  ["<C-j>"] = cmp.mapping.select_next_item(),
+  ["<C-k>"] = cmp.mapping.select_prev_item(),
+  ["<CR>"]  = cmp.mapping.confirm({ select = false }),
+})` },
+
+  // ---------------- Format & Lint ----------------
+  { id:"conform", name:"conform.nvim", repo:"stevearc/conform.nvim", commit:"619363c", cat:CAT.FMT,
+    tagline:"Runs formatters like Prettier & Stylua on your files.",
+    keywords:"format prettier stylua formatting format on save",
+    body:`<p>Handles code formatting. It maps filetypes to formatters — <code>prettier</code> for web files, <code>stylua</code> for Lua, <code>isort</code>+<code>black</code> for Python. Prettier reads your project's <code>.prettierrc</code> (or your global <code>~/.prettierrc</code> fallback).</p>
+      <p>Format-on-save is <strong>off by default</strong> (matching your VS Code F3 workflow) and toggled with <code>&lt;leader&gt;tf</code>.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;mp","Format the file (or selection in visual mode)"],
+      ["&lt;leader&gt;tf","Toggle format-on-save on/off"]
+    ],
+    code:`formatters_by_ft = {
+  javascript = { "prettier" }, typescript = { "prettier" },
+  typescriptreact = { "prettier" }, htmlangular = { "prettier" },
+  lua = { "stylua" }, python = { "isort", "black" },
+}` },
+
+  { id:"nvim-lint", name:"nvim-lint", repo:"mfussenegger/nvim-lint", commit:"a219b2c", cat:CAT.FMT,
+    tagline:"Runs ESLint (via eslint_d) to flag problems as you work.",
+    keywords:"lint eslint eslint_d linter errors warnings",
+    body:`<p>Linting surfaces code-quality issues (unused vars, style violations) using <code>eslint_d</code> — a fast, always-running ESLint daemon. It re-lints automatically when you open a file, save, or leave insert mode.</p>`,
+    keymaps:[["&lt;leader&gt;l","Lint the current file now"]],
+    code:`lint.linters_by_ft = {
+  javascript = { "eslint_d" }, typescript = { "eslint_d" },
+  javascriptreact = { "eslint_d" }, typescriptreact = { "eslint_d" },
+}` },
+
+  // ---------------- Git ----------------
+  { id:"lazygit", name:"lazygit.nvim", repo:"kdheepak/lazygit.nvim", commit:"a04ad0d", cat:CAT.GIT,
+    tagline:"Opens the Lazygit terminal UI inside Neovim.",
+    keywords:"git lazygit commit push stage terminal ui",
+    body:`<p>Launches <a href="https://github.com/jesseduffield/lazygit" target="_blank">Lazygit</a>, a keyboard-driven terminal UI for git, in a floating window. Stage hunks, commit, push, branch, and browse history — all visually. Requires the <code>lazygit</code> binary installed on the system.</p>
+      <p>Inside it: <code>Space</code> stage, <code>a</code> stage all, <code>c</code> commit, <code>P</code> push, <code>?</code> help, <code>q</code> quit.</p>`,
+    keymaps:[["&lt;leader&gt;gg","Open Lazygit"]],
+    code:`keys = {
+  { "<leader>gg", "<cmd>LazyGit<cr>", desc = "Open LazyGit" },
+}` },
+
+  { id:"gitsigns", name:"gitsigns.nvim", repo:"lewis6991/gitsigns.nvim", commit:"31d6fb2", cat:CAT.GIT,
+    tagline:"Shows git changes in the gutter; stage/reset/preview hunks.",
+    keywords:"git signs gutter hunk stage reset blame diff",
+    body:`<p>Puts <code>+</code>/<code>~</code>/<code>-</code> marks in the left gutter for added/changed/removed lines vs the last commit. You can stage or reset individual "hunks" (change blocks) without leaving the file, preview a hunk, or see inline git blame.</p>`,
+    keymaps:[
+      ["]h / [h","Next / previous changed hunk"],
+      ["&lt;leader&gt;hs","Stage hunk (works in visual too)"],
+      ["&lt;leader&gt;hr","Reset hunk"],["&lt;leader&gt;hS","Stage whole buffer"],
+      ["&lt;leader&gt;hR","Reset whole buffer"],["&lt;leader&gt;hu","Undo stage hunk"],
+      ["&lt;leader&gt;hp","Preview hunk"],["&lt;leader&gt;hb","Blame line (full)"],
+      ["&lt;leader&gt;hB","Toggle inline line blame"],
+      ["&lt;leader&gt;hd","Diff this file"],["ih <span class='mode-pill'>o/x</span>","Select hunk (text object)"]
+    ],
+    code:`map("n", "<leader>hp", gs.preview_hunk, "Preview hunk")
+map("n", "<leader>hb", function() gs.blame_line({ full = true }) end, "Blame line")` },
+
+  // ---------------- Diagnostics ----------------
+  { id:"trouble", name:"trouble.nvim", repo:"folke/trouble.nvim", commit:"bd67efe", cat:CAT.DIAG,
+    tagline:"A tidy, navigable list of all diagnostics / todos / quickfix.",
+    keywords:"trouble diagnostics errors problems quickfix todo list",
+    body:`<p>A prettier "Problems" panel. Instead of hunting errors file by file, Trouble gives you one navigable list of all diagnostics (workspace or document), the quickfix list, location list, and your TODO comments.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;xw","Workspace diagnostics"],["&lt;leader&gt;xd","Document diagnostics"],
+      ["&lt;leader&gt;xq","Quickfix list"],["&lt;leader&gt;xl","Location list"],["&lt;leader&gt;xt","TODOs in Trouble"]
+    ],
+    code:`{ "<leader>xw", "<cmd>Trouble diagnostics toggle<CR>", desc = "Workspace diagnostics" }` },
+
+  { id:"todo-comments", name:"todo-comments.nvim", repo:"folke/todo-comments.nvim", commit:"31e3c38", cat:CAT.DIAG,
+    tagline:"Highlights and lets you jump between TODO / FIX / NOTE comments.",
+    keywords:"todo fixme note hack comments highlight",
+    body:`<p>Makes special comments like <code>TODO:</code>, <code>FIX:</code>, <code>HACK:</code>, <code>NOTE:</code> stand out with colors and icons, and lets you jump between them. Integrates with Telescope (<code>:TodoTelescope</code>) and Trouble.</p>`,
+    keymaps:[["]t / [t","Next / previous TODO comment"]],
+    code:`keymap.set("n", "]t", function() todo_comments.jump_next() end)
+keymap.set("n", "[t", function() todo_comments.jump_prev() end)` },
+
+  // ---------------- Editing ----------------
+  { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"bd41519", cat:CAT.EDIT,
+    tagline:"Accurate syntax highlighting & code understanding.",
+    keywords:"treesitter syntax highlighting parser",
+    body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown, bash.</p>`,
+    keymaps:[[":TSUpdate","Update installed parsers"]],
+    code:`require("nvim-treesitter").install({
+  "lua", "vim", "javascript", "typescript", "tsx",
+  "html", "css", "json", "markdown", "bash",
+})` },
+
+  { id:"autotag", name:"nvim-ts-autotag", repo:"windwp/nvim-ts-autotag", commit:"88c1453", cat:CAT.EDIT,
+    tagline:"Auto-closes and auto-renames JSX/HTML tag pairs.",
+    keywords:"auto close rename tag jsx html angular linked editing",
+    body:`<p>Type <code>&lt;div&gt;</code> and it adds <code>&lt;/div&gt;</code>; rename one tag and its pair updates too. This is the Neovim equivalent of your VS Code <code>editor.linkedEditing</code>. Works in JSX/TSX, HTML, and Angular templates via Treesitter.</p>`,
+    keymaps:[["—","Automatic — no keys to press"]],
+    code:`require("nvim-ts-autotag").setup({
+  opts = { enable_close = true, enable_rename = true },
+})` },
+
+  { id:"comment", name:"Comment.nvim", repo:"numToStr/Comment.nvim", commit:"e30b7f2", cat:CAT.EDIT,
+    tagline:"Toggle comments with gcc / gc, JSX-aware.",
+    keywords:"comment toggle gcc gc commenting",
+    body:`<p>Comment/uncomment code with motions. <code>gcc</code> toggles the current line; <code>gc</code> + a motion (e.g. <code>gcap</code>) comments a block; <code>gc</code> in visual mode comments the selection. With <strong>ts-context-commentstring</strong> it uses the right comment style inside mixed files (e.g. <code>{/* */}</code> inside JSX).</p>`,
+    keymaps:[
+      ["gcc","Toggle comment on the current line"],
+      ["gc <span class='mode-pill'>+motion</span>","Comment a motion/block"],
+      ["gc <span class='mode-pill'>visual</span>","Comment the selection"]
+    ],
+    code:`comment.setup({
+  pre_hook = ts_context_commentstring.create_pre_hook(), -- JSX/TSX aware
+})` },
+
+  { id:"surround", name:"nvim-surround", repo:"kylechui/nvim-surround", commit:"2e93e15", cat:CAT.EDIT,
+    tagline:"Add / change / delete surrounding quotes, brackets, tags.",
+    keywords:"surround quotes brackets parentheses tags change delete",
+    body:`<p>Manipulate the characters <em>around</em> text. Add quotes around a word, change <code>(</code>) to <code>[</code>], delete surrounding tags — all with short mnemonics.</p>`,
+    keymaps:[
+      ["ys<span class='mode-pill'>motion</span>c","Surround a motion with <code>c</code> (e.g. <code>ysiw\"</code>)"],
+      ["cs<code>ab</code>","Change surrounding <code>a</code> to <code>b</code> (e.g. <code>cs\"'</code>)"],
+      ["ds<code>c</code>","Delete surrounding <code>c</code> (e.g. <code>ds\"</code>)"]
+    ],
+    code:`return { "kylechui/nvim-surround", version = "*", config = true }` },
+
+  { id:"substitute", name:"substitute.nvim", repo:"gbprod/substitute.nvim", commit:"0d20773", cat:CAT.EDIT,
+    tagline:"Replace text with your yanked text using a motion.",
+    keywords:"substitute replace paste over motion",
+    body:`<p>A faster "replace X with what I copied" operator. <code>s</code> + a motion replaces that text with the clipboard contents.</p>
+      <div class="note warn"><strong>Heads up:</strong> this remaps <code>s</code> in normal mode (normally "substitute character"). Because of this, in the <em>file explorer</em> your <code>s</code>/<code>S</code> split keys are set separately and only apply inside the tree.</div>`,
+    keymaps:[
+      ["s <span class='mode-pill'>+motion</span>","Substitute over a motion"],
+      ["ss","Substitute the whole line"],["S","Substitute to end of line"],
+      ["s <span class='mode-pill'>visual</span>","Substitute the selection"]
+    ],
+    code:`vim.keymap.set("n", "s",  substitute.operator)
+vim.keymap.set("n", "ss", substitute.line)
+vim.keymap.set("x", "s",  substitute.visual)` },
+
+  { id:"autopairs", name:"nvim-autopairs", repo:"windwp/nvim-autopairs", commit:"7b9923a", cat:CAT.EDIT,
+    tagline:"Auto-inserts the closing bracket / quote.",
+    keywords:"auto pairs brackets quotes parentheses close",
+    body:`<p>Type <code>(</code> and it inserts <code>)</code> with the cursor between them. Treesitter-aware, so it won't add pairs where they don't belong (e.g. inside strings). Hooks into nvim-cmp so accepting a function completion adds <code>()</code>.</p>`,
+    keymaps:[["—","Automatic while typing"]],
+    code:`autopairs.setup({ check_ts = true })
+cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
+
+  { id:"maximizer", name:"vim-maximizer", repo:"szw/vim-maximizer", commit:"2e54952", cat:CAT.EDIT,
+    tagline:"Toggle a split to full-screen and back.",
+    keywords:"maximize split window zoom fullscreen",
+    body:`<p>When you have several splits open, this zooms the current one to fill the screen — press again to restore the layout. Great for focusing on one file temporarily.</p>`,
+    keymaps:[["&lt;leader&gt;sm","Maximize / restore the current split"]],
+    code:`{ "<leader>sm", "<cmd>MaximizerToggle<CR>", desc = "Maximize/minimize a split" }` },
+
+  { id:"auto-session", name:"auto-session", repo:"rmagatti/auto-session", commit:"6cde387", cat:CAT.EDIT,
+    tagline:"Save & restore your open files per project folder.",
+    keywords:"session restore save workspace",
+    body:`<p>Remembers which files/splits you had open in a directory, so you can reopen a project exactly where you left off. Auto-restore is off here — you save/restore on demand.</p>`,
+    keymaps:[
+      ["&lt;leader&gt;wr","Restore the session for this folder"],
+      ["&lt;leader&gt;ws","Save the current session"]
+    ],
+    code:`auto_session.setup({ auto_restore_enabled = false })` },
+
+  { id:"tmux-nav", name:"vim-tmux-navigator", repo:"christoomey/vim-tmux-navigator", commit:"e41c431", cat:CAT.EDIT,
+    tagline:"Move between Neovim splits (and tmux panes) with Ctrl-h/j/k/l.",
+    keywords:"tmux navigator split window navigate ctrl",
+    body:`<p>Lets <code>Ctrl-h/j/k/l</code> move seamlessly between Neovim splits — and if you run Neovim inside tmux, across tmux panes too, with the same keys.</p>`,
+    keymaps:[["&lt;C-h/j/k/l&gt;","Move to the split left/down/up/right"]],
+    code:`-- provided by the plugin; no extra config needed` },
+
+  // ---------------- UI ----------------
+  { id:"catppuccin", name:"catppuccin", repo:"catppuccin/nvim", commit:"c7c692a", cat:CAT.UI,
+    tagline:"The color theme (this docs site matches it).",
+    keywords:"colorscheme theme catppuccin colors",
+    body:`<p>The soothing pastel colorscheme applied to the whole editor. Loaded with high priority so it's set before other UI. (These docs use the same Mocha/Latte palettes.)</p>`,
+    keymaps:[["—","Set once at startup"]],
+    code:`vim.cmd("colorscheme catppuccin-nvim")` },
+
+  { id:"lualine", name:"lualine.nvim", repo:"nvim-lualine/lualine.nvim", commit:"221ce6b", cat:CAT.UI,
+    tagline:"The statusline at the bottom (mode, file, git, diagnostics).",
+    keywords:"statusline bottom bar mode lualine",
+    body:`<p>The information bar at the bottom: current mode (color-coded), file name, git branch, diagnostics, encoding, and a count of pending plugin updates. Uses a custom color theme defined inline.</p>`,
+    keymaps:[["—","Display only"]],
+    code:`lualine.setup({ options = { theme = my_lualine_theme } })` },
+
+  { id:"bufferline", name:"bufferline.nvim", repo:"akinsho/bufferline.nvim", commit:"655133c", cat:CAT.UI,
+    tagline:"Tab bar across the top.",
+    keywords:"bufferline tabs top bar buffers",
+    body:`<p>The row of tabs along the top. Configured in <code>"tabs"</code> mode with a "slant" separator style, so it shows Vim tab-pages with file icons.</p>`,
+    keymaps:[["—","Click or use tab navigation"]],
+    code:`opts = { options = { mode = "tabs", separator_style = "slant" } }` },
+
+  { id:"alpha", name:"alpha-nvim", repo:"goolord/alpha-nvim", commit:"6c6a89d", cat:CAT.UI,
+    tagline:"The start dashboard with the NEOVIM logo and shortcuts.",
+    keywords:"dashboard start screen greeter alpha home",
+    body:`<p>The greeting screen when you open Neovim with no file — an ASCII "NEOVIM" banner plus quick buttons for new file, explorer, find file, find word, restore session, and quit. (Defined in <code>greet.lua</code>.)</p>`,
+    keymaps:[
+      ["SPC ff","Find file (from dashboard)"],["SPC ee","Toggle explorer"],["q","Quit Neovim"]
+    ],
+    code:`dashboard.button("SPC ff", " Find File", "<cmd>Telescope find_files<CR>")` },
+
+  { id:"which-key", name:"which-key.nvim", repo:"folke/which-key.nvim", commit:"3aab214", cat:CAT.UI,
+    tagline:"Pops up a hint of what keys are available after you start a shortcut.",
+    keywords:"which key hints popup keybindings help",
+    body:`<p>Start a shortcut (like press <code>Space</code>) and wait half a second — which-key shows a popup of all the keys you can press next and what they do. Fantastic for learning your own keymaps.</p>`,
+    keymaps:[["&lt;leader&gt; <span class='mode-pill'>wait</span>","Shows available follow-up keys"]],
+    code:`init = function() vim.o.timeout = true; vim.o.timeoutlen = 500 end` },
+
+  { id:"indent", name:"indent-blankline.nvim", repo:"lukas-reineke/indent-blankline.nvim", commit:"d28a3f7", cat:CAT.UI,
+    tagline:"Vertical guide lines showing indentation levels.",
+    keywords:"indent guides lines blankline ibl",
+    body:`<p>Draws faint vertical lines at each indent level (using the <code>┊</code> character) so nested code is easier to scan.</p>`,
+    keymaps:[["—","Display only"]],
+    code:`opts = { indent = { char = "┊" } }` },
+
+  { id:"dressing", name:"dressing.nvim", repo:"stevearc/dressing.nvim", commit:"2d7c2db", cat:CAT.UI,
+    tagline:"Prettier input & select popups.",
+    keywords:"dressing ui input select prompt",
+    body:`<p>Upgrades Neovim's plain input prompts and selection menus (like the rename box or code-action list) into nicer floating windows.</p>`,
+    keymaps:[["—","Automatic UI upgrade"]],
+    code:`return { "stevearc/dressing.nvim", event = "VeryLazy" }` },
+
+  { id:"devicons", name:"nvim-web-devicons", repo:"nvim-tree/nvim-web-devicons", commit:"2ae6958", cat:CAT.UI,
+    tagline:"File-type icons used across the UI.",
+    keywords:"icons devicons filetype nerd font",
+    body:`<p>Provides the colored file-type icons shown in the tree, tabs, statusline and pickers. Requires a Nerd Font in your terminal to render.</p>`,
+    keymaps:[["—","Used by other plugins"]],
+    code:`-- a dependency of nvim-tree, lualine, bufferline, telescope` },
+
+  // ---------------- Core ----------------
+  { id:"lazy", name:"lazy.nvim", repo:"folke/lazy.nvim", commit:"306a055", cat:CAT.CORE,
+    tagline:"The plugin manager that runs everything.",
+    keywords:"lazy plugin manager package install",
+    body:`<p>The plugin manager. It installs, updates, and lazy-loads every plugin, and records exact versions in <code>lazy-lock.json</code> (that's where the commit hashes on this page come from). Run <code>:Lazy</code> for its dashboard, <code>:Lazy sync</code> to install/update.</p>`,
+    keymaps:[[":Lazy","Open the plugin manager"],[":Lazy sync","Install / update / clean plugins"]],
+    code:`require("lazy").setup({
+  { import = "shubu.plugins" },
+  { import = "shubu.plugins.lsp" },
+})` },
+
+  { id:"plenary", name:"plenary.nvim", repo:"nvim-lua/plenary.nvim", commit:"74b06c6", cat:CAT.CORE,
+    tagline:"Shared Lua helper library many plugins depend on.",
+    keywords:"plenary library utils dependency",
+    body:`<p>Not something you use directly — it's a toolkit of Lua utilities (async, paths, jobs) that Telescope, Harpoon, gitsigns, todo-comments and others build on.</p>`,
+    keymaps:[["—","Library only"]],
+    code:`-- listed as a dependency of many plugins` }
+];
+
+/* Master keymap list (searchable). group = where it comes from. */
+const KEYMAPS = [
+  // core / motions
+  {k:"&lt;leader&gt;&lt;leader&gt;", d:"Quick Open — Telescope find files", g:"Core", m:"n"},
+  {k:"j / k", d:"Move by visual line (wrapped-line aware)", g:"Core", m:"n/v"},
+  {k:"H / L", d:"Go to first / last non-blank char of line", g:"Core", m:"n"},
+  {k:"J", d:"Join line below, keep cursor in place", g:"Core", m:"n"},
+  {k:"&lt;C-d&gt; / &lt;C-u&gt;", d:"Half-page down / up and re-center", g:"Core", m:"n"},
+  {k:"n / N", d:"Next / prev search result, centered", g:"Core", m:"n"},
+  {k:"J / K", d:"Move selected lines down / up", g:"Core", m:"v"},
+  {k:"p", d:"Paste over selection WITHOUT clobbering clipboard", g:"Core", m:"x"},
+  {k:"&lt;leader&gt;p", d:"Paste without overwriting clipboard", g:"Core", m:"x"},
+  {k:"&lt;leader&gt;d", d:"Delete without yanking (black hole)", g:"Core", m:"n/v"},
+  {k:"&lt;C-c&gt;", d:"Use Ctrl-C as Escape", g:"Core", m:"i"},
+  {k:"&lt;leader&gt;s", d:"Search & replace word under cursor", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;cl / co / cn / cp", d:"Quickfix: close / open / next / prev", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;mm", d:"Run :make", g:"Core", m:"n"},
+  // LSP
+  {k:"gd", d:"Go to definition", g:"LSP", m:"n"},
+  {k:"gD", d:"Go to declaration", g:"LSP", m:"n"},
+  {k:"gR", d:"Show references", g:"LSP", m:"n"},
+  {k:"gi", d:"Go to implementation", g:"LSP", m:"n"},
+  {k:"gt", d:"Go to type definition", g:"LSP", m:"n"},
+  {k:"K", d:"Hover documentation", g:"LSP", m:"n"},
+  {k:"&lt;leader&gt;ca", d:"Code actions", g:"LSP", m:"n/v"},
+  {k:"&lt;leader&gt;rn", d:"Rename symbol", g:"LSP", m:"n"},
+  {k:"&lt;leader&gt;D", d:"Buffer diagnostics (Telescope)", g:"LSP", m:"n"},
+  {k:"&lt;leader&gt;d", d:"Line diagnostic float", g:"LSP", m:"n"},
+  {k:"[d / ]d", d:"Previous / next diagnostic", g:"LSP", m:"n"},
+  {k:"&lt;leader&gt;rs", d:"Restart LSP", g:"LSP", m:"n"},
+  // Telescope
+  {k:"&lt;leader&gt;ff", d:"Find files", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fg", d:"Live grep (search text)", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fb", d:"Buffers", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fw", d:"Grep word under cursor", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fd", d:"Diagnostics", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fr", d:"Resume last picker", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;f.", d:"Recent files", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;f/", d:"Fuzzy find in current buffer", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fh", d:"Help tags", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;fn", d:"Neovim config files", g:"Telescope", m:"n"},
+  // file tree
+  {k:"&lt;leader&gt;ee", d:"Toggle file explorer", g:"File Tree", m:"n"},
+  {k:"&lt;leader&gt;ef", d:"Explorer on current file", g:"File Tree", m:"n"},
+  {k:"&lt;leader&gt;ec / er", d:"Collapse / refresh tree", g:"File Tree", m:"n"},
+  {k:"s / S", d:"Open file in vertical / horizontal split", g:"File Tree", m:"in tree"},
+  // harpoon
+  {k:"&lt;leader&gt;a", d:"Harpoon: add file", g:"Harpoon", m:"n"},
+  {k:"&lt;leader&gt;h", d:"Harpoon: quick menu", g:"Harpoon", m:"n"},
+  {k:"&lt;leader&gt;1..4", d:"Harpoon: jump to file 1–4", g:"Harpoon", m:"n"},
+  // git
+  {k:"&lt;leader&gt;gg", d:"Open Lazygit", g:"Git", m:"n"},
+  {k:"]h / [h", d:"Next / prev git hunk", g:"Git", m:"n"},
+  {k:"&lt;leader&gt;hs / hr", d:"Stage / reset hunk", g:"Git", m:"n/v"},
+  {k:"&lt;leader&gt;hp", d:"Preview hunk", g:"Git", m:"n"},
+  {k:"&lt;leader&gt;hb", d:"Blame line", g:"Git", m:"n"},
+  {k:"&lt;leader&gt;hd", d:"Diff this file", g:"Git", m:"n"},
+  // format / lint
+  {k:"&lt;leader&gt;mp", d:"Format file / selection", g:"Format", m:"n/v"},
+  {k:"&lt;leader&gt;tf", d:"Toggle format-on-save", g:"Format", m:"n"},
+  {k:"&lt;leader&gt;l", d:"Lint current file", g:"Lint", m:"n"},
+  // trouble / todo
+  {k:"&lt;leader&gt;xw / xd", d:"Trouble: workspace / document diagnostics", g:"Trouble", m:"n"},
+  {k:"&lt;leader&gt;xq / xl / xt", d:"Trouble: quickfix / loclist / todos", g:"Trouble", m:"n"},
+  {k:"]t / [t", d:"Next / prev TODO comment", g:"Editing", m:"n"},
+  // editing plugins
+  {k:"gcc", d:"Toggle line comment", g:"Editing", m:"n"},
+  {k:"gc", d:"Comment motion / selection", g:"Editing", m:"n/v"},
+  {k:"ys / cs / ds", d:"Add / change / delete surround", g:"Editing", m:"n"},
+  {k:"s / ss / S", d:"Substitute with motion / line / to-EOL", g:"Editing", m:"n"},
+  {k:"&lt;leader&gt;sm", d:"Maximize / restore split", g:"Editing", m:"n"},
+  {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits", g:"Windows", m:"n"},
+  // sessions
+  {k:"&lt;leader&gt;wr / ws", d:"Restore / save session", g:"Session", m:"n"},
+  // completion (insert)
+  {k:"&lt;C-j&gt; / &lt;C-k&gt;", d:"Completion: next / prev item", g:"Completion", m:"i"},
+  {k:"&lt;C-Space&gt;", d:"Trigger completion", g:"Completion", m:"i"},
+  {k:"&lt;CR&gt;", d:"Confirm completion", g:"Completion", m:"i"}
+];
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
+
+const catOrder = [CAT.NAV, CAT.LSP, CAT.FMT, CAT.GIT, CAT.DIAG, CAT.EDIT, CAT.UI, CAT.CORE];
+
+function repoUrl(repo){ return "https://github.com/"+repo; }
+
+/* ---- Sidebar ---- */
+function buildSidebar(){
+  const nav = $("#sidebar"); nav.innerHTML = "";
+  // Getting started
+  const g = el("div","side-group");
+  g.innerHTML = `<div class="label">Getting Started</div>`;
+  GUIDES.forEach(x=>{
+    const a = el("a","side-link"); a.href="#"+x.id; a.dataset.target=x.id; a.textContent=x.nav||x.title; g.appendChild(a);
+  });
+  const km = el("a","side-link"); km.href="#keymaps"; km.dataset.target="keymaps";
+  km.innerHTML = `Keymaps cheatsheet <span class="tag">${KEYMAPS.length}</span>`; g.appendChild(km);
+  nav.appendChild(g);
+  // plugins by category
+  catOrder.forEach(cat=>{
+    const items = PLUGINS.filter(p=>p.cat===cat);
+    if(!items.length) return;
+    const grp = el("div","side-group");
+    grp.innerHTML = `<div class="label">${cat}</div>`;
+    items.forEach(p=>{
+      const a = el("a","side-link"); a.href="#"+p.id; a.dataset.target=p.id; a.textContent=p.name; grp.appendChild(a);
+    });
+    nav.appendChild(grp);
+  });
+}
+
+/* ---- Content ---- */
+function kmRows(list){
+  return list.map(([k,d])=>`<tr><td class="keys"><code>${k}</code></td><td>${d}</td></tr>`).join("");
+}
+function buildContent(){
+  const c = $("#content"); c.innerHTML="";
+  // hero
+  const hero = el("section","doc"); hero.id="top";
+  hero.innerHTML = `<h1>Neovim Config Reference</h1>`;
+  c.appendChild(hero);
+  // guides
+  GUIDES.forEach(x=>{
+    const s = el("section","doc"); s.id=x.id;
+    s.innerHTML = `<h2 class="sec-title">${x.title}</h2>${x.html}`;
+    c.appendChild(s);
+  });
+  // keymaps cheatsheet
+  const kms = el("section","doc"); kms.id="keymaps";
+  const groups = [...new Set(KEYMAPS.map(x=>x.g))];
+  let kmHtml = `<h2 class="sec-title">⌨️ Keymaps cheatsheet</h2>
+    <p>Every custom shortcut, grouped by where it comes from. <strong>Leader = Space</strong>. Search any of these with <span class="kbd">Ctrl K</span>.</p>`;
+  groups.forEach(gr=>{
+    kmHtml += `<h3>${gr}</h3><table><tr><th>Keys</th><th>Mode</th><th>Action</th></tr>`;
+    KEYMAPS.forEach((x,i)=>{ if(x.g!==gr) return;
+      kmHtml += `<tr class="km-row" id="km-${i}"><td class="keys"><code>${x.k}</code></td>
+        <td><span class="mode-pill">${x.m}</span></td><td>${x.d}</td></tr>`;
+    });
+    kmHtml += `</table>`;
+  });
+  kms.innerHTML = kmHtml; c.appendChild(kms);
+  // plugins
+  catOrder.forEach(cat=>{
+    PLUGINS.filter(p=>p.cat===cat).forEach(p=>{
+      const s = el("section","doc"); s.id=p.id;
+      s.innerHTML = `
+        <div class="plugin-head"><h2 class="sec-title">${p.name}</h2></div>
+        <p class="tagline">${p.tagline}</p>
+        <div class="plugin-meta">
+          <a class="badge repo" href="${repoUrl(p.repo)}" target="_blank" rel="noopener">⎇ ${p.repo}</a>
+          <span class="badge ver" title="Locked commit in lazy-lock.json">📌 ${p.commit}</span>
+          <span class="badge cat">${p.cat}</span>
+        </div>
+        ${p.body}
+        ${p.keymaps && p.keymaps.length ? `<h3>Keymaps</h3><table><tr><th>Keys</th><th>Action</th></tr>${kmRows(p.keymaps)}</table>` : ""}
+        <h3>Config snippet</h3>
+        <pre><code>${escapeHtml(p.code)}</code></pre>
+      `;
+      c.appendChild(s);
+    });
+  });
+  // footer
+  const f = el("section","doc");
+  f.innerHTML = `<hr class="hr"><p style="font-size:13px">Generated from the config in <code>config/</code> · versions pinned in <code>lazy-lock.json</code>. Update this page when you change your setup.</p>`;
+  c.appendChild(f);
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ---- Scroll spy ---- */
+function setupScrollSpy(){
+  const links = [...document.querySelectorAll(".side-link")];
+  const map = {}; links.forEach(l=>map[l.dataset.target]=l);
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove("active"));
+        const a = map[e.target.id]; if(a) a.classList.add("active");
+      }
+    });
+  }, { rootMargin:"-15% 0px -75% 0px" });
+  document.querySelectorAll("section.doc").forEach(s=>obs.observe(s));
+}
+
+/* ============================================================
+   SEARCH INDEX + FUZZY PALETTE
+   ============================================================ */
+function buildIndex(){
+  const idx = [];
+  GUIDES.forEach(x=> idx.push({type:"Guide", title:x.title, sub:"Guide", id:x.id, hay:(x.title).toLowerCase()}));
+  idx.push({type:"Guide", title:"Keymaps cheatsheet", sub:"Reference", id:"keymaps", hay:"keymaps cheatsheet shortcuts keys reference"});
+  PLUGINS.forEach(p=> idx.push({type:"Plugin", title:p.name, sub:p.cat, id:p.id, mono:false,
+    hay:(p.name+" "+p.cat+" "+p.tagline+" "+(p.keywords||"")).toLowerCase()}));
+  KEYMAPS.forEach((x,i)=> idx.push({type:"Keymap", title:stripTags(x.k), sub:x.d, id:"km-"+i, mono:true,
+    hay:(stripTags(x.k)+" "+x.d+" "+x.g).toLowerCase()}));
+  return idx;
+}
+function stripTags(s){ return s.replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
+
+/* subsequence fuzzy score: higher = better, -1 = no match */
+function fuzzy(q, hay){
+  if(!q) return 0;
+  let qi=0, score=0, prev=-2;
+  for(let hi=0; hi<hay.length && qi<q.length; hi++){
+    if(hay[hi]===q[qi]){
+      score += (hi===prev+1)?3:1;          // consecutive chars bonus
+      if(hi===0 || hay[hi-1]===" ") score+=4; // word-start bonus
+      prev=hi; qi++;
+    }
+  }
+  return qi===q.length ? score - hay.length*0.01 : -1;
+}
+
+const IDX = buildIndex();
+let selIdx = 0, curResults = [];
+
+function runSearch(q){
+  q = q.trim().toLowerCase();
+  const box = $("#results");
+  if(!q){
+    curResults = IDX.filter(x=>x.type==="Plugin").slice(0,8);
+  } else {
+    curResults = IDX.map(x=>({x, s:fuzzy(q, x.hay)}))
+      .filter(o=>o.s>=0).sort((a,b)=>b.s-a.s).slice(0,40).map(o=>o.x);
+  }
+  selIdx = 0;
+  if(!curResults.length){ box.innerHTML = `<div class="empty">No matches for “${q}”</div>`; return; }
+  box.innerHTML = curResults.map((r,i)=>`
+    <div class="res ${i===0?'sel':''}" data-i="${i}">
+      <span class="type ${r.type}">${r.type}</span>
+      <span class="rtitle ${r.mono?'mono':''}">${highlight(r.title, q)}</span>
+      <span class="rsub">${r.sub}</span>
+    </div>`).join("");
+  [...box.querySelectorAll(".res")].forEach(node=>{
+    node.addEventListener("click",()=>go(curResults[+node.dataset.i]));
+    node.addEventListener("mousemove",()=>{ setSel(+node.dataset.i); });
+  });
+}
+function highlight(text, q){
+  if(!q) return text;
+  const lower=text.toLowerCase(); let out="", qi=0;
+  for(let i=0;i<text.length;i++){
+    if(qi<q.length && lower[i]===q[qi]){ out+="<mark>"+text[i]+"</mark>"; qi++; }
+    else out+=text[i];
+  }
+  return out;
+}
+function setSel(i){
+  const nodes=[...$("#results").querySelectorAll(".res")];
+  if(!nodes.length) return;
+  selIdx=(i+nodes.length)%nodes.length;
+  nodes.forEach((n,j)=>n.classList.toggle("sel", j===selIdx));
+  nodes[selIdx].scrollIntoView({block:"nearest"});
+}
+function go(r){
+  if(!r) return;
+  closePalette();
+  const target = document.getElementById(r.id);
+  if(target){
+    target.scrollIntoView({behavior:"smooth", block: r.id.startsWith("km-")?"center":"start"});
+    if(r.id.startsWith("km-")){
+      target.classList.add("flash");
+      setTimeout(()=>target.classList.remove("flash"), 1600);
+    }
+    history.replaceState(null,"","#"+r.id);
+  }
+}
+
+/* ---- palette open/close ---- */
+const overlay = $("#paletteOverlay"), input = $("#paletteInput");
+function openPalette(){ overlay.classList.add("open"); input.value=""; runSearch(""); input.focus(); }
+function closePalette(){ overlay.classList.remove("open"); }
+$("#searchBtn").addEventListener("click", openPalette);
+overlay.addEventListener("click", e=>{ if(e.target===overlay) closePalette(); });
+input.addEventListener("input", ()=>runSearch(input.value));
+input.addEventListener("keydown", e=>{
+  if(e.key==="ArrowDown"){ e.preventDefault(); setSel(selIdx+1); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); setSel(selIdx-1); }
+  else if(e.key==="Enter"){ e.preventDefault(); go(curResults[selIdx]); }
+  else if(e.key==="Escape"){ closePalette(); }
+});
+document.addEventListener("keydown", e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); overlay.classList.contains("open")?closePalette():openPalette(); }
+  else if(e.key==="/" && !overlay.classList.contains("open") && document.activeElement.tagName!=="INPUT"){ e.preventDefault(); openPalette(); }
+});
+
+/* ---- theme ---- */
+const themeBtn = $("#themeBtn");
+function applyTheme(t){
+  document.documentElement.dataset.theme=t;
+  themeBtn.textContent = t==="dark"?"🌙":"☀️";
+  try{ localStorage.setItem("nvdocs-theme", t); }catch(e){}
+}
+themeBtn.addEventListener("click", ()=>{
+  applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+});
+
+/* ---- mobile menu ---- */
+$("#menuBtn").addEventListener("click", ()=> $("#sidebar").classList.toggle("open"));
+document.addEventListener("click", e=>{
+  const sb=$("#sidebar");
+  if(window.innerWidth<=860 && sb.classList.contains("open") && !sb.contains(e.target) && e.target.id!=="menuBtn"){
+    if(e.target.closest(".side-link")) sb.classList.remove("open");
+  }
+});
+$("#sidebar").addEventListener("click", e=>{ if(e.target.closest(".side-link") && window.innerWidth<=860) $("#sidebar").classList.remove("open"); });
+
+/* ---- init ---- */
+(function init(){
+  let t="dark";
+  try{ t = localStorage.getItem("nvdocs-theme") || (matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"); }catch(e){}
+  applyTheme(t);
+  // platform-aware kbd hint
+  if(navigator.platform && /Mac|iPhone|iPad/.test(navigator.platform)) $("#kbdHint").textContent="⌘ K";
+  buildSidebar(); buildContent(); setupScrollSpy();
+})();
+</script>
+</body>
+</html>
