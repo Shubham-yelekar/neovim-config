@@ -12,6 +12,7 @@ vim.keymap.set("n", "n", "nzzzv") -- Next search result and center screen
 vim.keymap.set("n", "N", "Nzzzv") -- Previous search result and center screen
 
 vim.keymap.set("x", "<leader>p", [["_dP]]) -- Paste without overwriting clipboard
+vim.keymap.set("x", "p", [["_dP]]) -- Visual paste over selection WITHOUT clobbering clipboard (Ditto stays intact)
 vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]]) -- Delete without yanking
 
 vim.keymap.set("i", "<C-c>", "<Esc>") -- Use Ctrl+C as Escape
@@ -47,3 +48,11 @@ vim.keymap.set("n", "<leader>li", "<cmd>checkhealth vim.lsp<CR>") -- Check LSP h
 vim.keymap.set("n", "<leader>mm", "<cmd>make<CR>") -- Run make in current project
 
 vim.keymap.set("n", "<leader><leader>", "<cmd>Telescope find_files<CR>") -- Quick Open (fuzzy file search, matches VS Code)
+
+-- Briefly highlight yanked text (built-in; no plugin needed)
+vim.api.nvim_create_autocmd("TextYankPost", {
+  group = vim.api.nvim_create_augroup("HighlightYank", { clear = true }),
+  callback = function()
+    vim.hl.on_yank({ higroup = "IncSearch", timeout = 200 })
+  end,
+})
