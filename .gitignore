@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Shell history - personal, churns on every command, and this repo is public
+zsh/.zsh_history
+zsh/.zhistory
