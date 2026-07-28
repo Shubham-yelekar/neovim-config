@@ -380,7 +380,7 @@ vim.keymap.set("n", "S", api.node.open.horizontal, opts("Horizontal Split"))` },
   },
 })` },
 
-  { id:"lspconfig", name:"nvim-lspconfig", repo:"neovim/nvim-lspconfig", commit:"d592c1e", cat:CAT.LSP,
+  { id:"lspconfig", name:"nvim-lspconfig", repo:"neovim/nvim-lspconfig", commit:"7ab79bb", cat:CAT.LSP,
     tagline:"Wires up language servers — go-to-definition, hover, rename, diagnostics.",
     keywords:"lsp language server definition references hover rename diagnostics",
     body:`<p>This connects Neovim to language servers (TypeScript, Angular, Lua, etc.), giving you IDE features: jump to definition, find references, hover docs, rename, code actions, and inline errors.</p>
@@ -486,14 +486,16 @@ map("n", "<leader>hb", function() gs.blame_line({ full = true }) end, "Blame lin
 keymap.set("n", "[t", function() todo_comments.jump_prev() end)` },
 
   // ---------------- Editing ----------------
-  { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"bd41519", cat:CAT.EDIT,
+  { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"61df849", cat:CAT.EDIT,
     tagline:"Accurate syntax highlighting & code understanding.",
     keywords:"treesitter syntax highlighting parser",
-    body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown, bash.</p>`,
+    body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown, bash and regex.</p>
+      <p>The <code>regex</code> parser isn't for editing regexes — it's there for <a href="#noice">noice</a>, which highlights the floating cmdline with treesitter. Without it the pattern in <code>:%s/foo/bar</code> renders unhighlighted.</p>`,
     keymaps:[[":TSUpdate","Update installed parsers"]],
     code:`require("nvim-treesitter").install({
   "lua", "vim", "javascript", "typescript", "tsx",
   "html", "css", "json", "markdown", "bash",
+  "regex", -- needed by noice for cmdline highlighting
 })` },
 
   { id:"autotag", name:"nvim-ts-autotag", repo:"windwp/nvim-ts-autotag", commit:"88c1453", cat:CAT.EDIT,
@@ -551,6 +553,38 @@ vim.keymap.set("x", "s",  substitute.visual)` },
     code:`autopairs.setup({ check_ts = true })
 cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
 
+  { id:"tabout", name:"tabout.nvim", repo:"abecodes/tabout.nvim", commit:"9a34994", cat:CAT.EDIT,
+    tagline:"Press Tab to jump out of a closing bracket or quote.",
+    keywords:"tab out brackets quotes escape pairs jump",
+    body:`<p>The natural partner to autopairs. Once autopairs has inserted <code>)</code> or <code>"</code> for you, the cursor is stuck <em>inside</em> the pair — tabout lets you press <code>Tab</code> to hop past the closing character instead of reaching for the arrow keys or <code>End</code>.</p>
+      <p>It's treesitter-aware, so it knows where the real pair boundary is. When there's nothing to tab out of, <code>Tab</code> falls through to a normal indent via <code>default_tab</code>. Note this only works because nvim-cmp's <code>preset.insert</code> mapping leaves <code>Tab</code> unbound — otherwise the two would fight over the key.</p>`,
+    keymaps:[
+      ["&lt;Tab&gt; <span class='mode-pill'>insert</span>","Jump out past the closing pair"],
+      ["&lt;S-Tab&gt; <span class='mode-pill'>insert</span>","Jump backwards out of a pair"],
+      ["&lt;C-t&gt; / &lt;C-d&gt; <span class='mode-pill'>insert</span>","Fallback: real indent / dedent"]
+    ],
+    code:`opts = {
+  tabkey = "<Tab>", backwards_tabkey = "<S-Tab>",
+  act_as_tab = true, completion = false,
+  tabouts = { { open = "(", close = ")" }, { open = "'", close = "'" } },
+}` },
+
+  { id:"toggleterm", name:"toggleterm.nvim", repo:"akinsho/toggleterm.nvim", commit:"50ea089", cat:CAT.EDIT,
+    tagline:"A terminal you can toggle open and shut without leaving Neovim.",
+    keywords:"terminal shell toggle console command run",
+    body:`<p>Opens a persistent terminal in a horizontal split at the bottom of the window. Press the toggle key again to hide it — the shell keeps running in the background, so builds and dev servers survive being tucked away.</p>
+      <p>The toggle is <code>&lt;C-\\&gt;</code> and works from insert mode too (<code>insert_mappings</code>). To get <em>out</em> of the terminal back to normal mode, use <code>&lt;C-\\&gt;&lt;C-n&gt;</code>.</p>`,
+    keymaps:[
+      ["&lt;C-\\&gt;","Toggle the terminal open / closed"],
+      ["&lt;C-\\&gt;&lt;C-n&gt; <span class='mode-pill'>in term</span>","Leave terminal insert mode"],
+      ["&lt;count&gt;&lt;C-\\&gt;","Open terminal number &lt;count&gt;"]
+    ],
+    code:`require("toggleterm").setup({
+  size = 15, open_mapping = [[<c-\\>]],
+  direction = "horizontal", start_in_insert = true,
+  insert_mappings = true, persist_size = true,
+})` },
+
   { id:"maximizer", name:"vim-maximizer", repo:"szw/vim-maximizer", commit:"2e54952", cat:CAT.EDIT,
     tagline:"Toggle a split to full-screen and back.",
     keywords:"maximize split window zoom fullscreen",
@@ -576,12 +610,18 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
     code:`-- provided by the plugin; no extra config needed` },
 
   // ---------------- UI ----------------
-  { id:"catppuccin", name:"catppuccin", repo:"catppuccin/nvim", commit:"c7c692a", cat:CAT.UI,
+  { id:"catppuccin", name:"catppuccin", repo:"catppuccin/nvim", commit:"79e2049", cat:CAT.UI,
     tagline:"The color theme (this docs site matches it).",
-    keywords:"colorscheme theme catppuccin colors",
-    body:`<p>The soothing pastel colorscheme applied to the whole editor. Loaded with high priority so it's set before other UI. (These docs use the same Mocha/Latte palettes.)</p>`,
+    keywords:"colorscheme theme catppuccin colors transparent",
+    body:`<p>The soothing pastel colorscheme applied to the whole editor. Loaded with high priority so it's set before other UI. (These docs use the same Mocha/Latte palettes.)</p>
+      <p><code>transparent_background</code> is on, so the editor background is left unpainted and the terminal shows through — this is what pairs with WezTerm's <code>window_background_opacity</code> and blur.</p>
+      <p><strong>Careful with the name:</strong> the plugin repo is <code>catppuccin/nvim</code>, but the colorschemes it registers are <code>catppuccin-mocha</code>, <code>-latte</code>, <code>-frappe</code> and <code>-macchiato</code>. There is no <code>catppuccin-nvim</code> scheme; using that name raises <code>E185</code> and aborts the rest of the config block.</p>`,
     keymaps:[["—","Set once at startup"]],
-    code:`vim.cmd("colorscheme catppuccin-nvim")` },
+    code:`require("catppuccin").setup({
+  flavour = "mocha",
+  transparent_background = true,
+})
+vim.cmd("colorscheme catppuccin-mocha")` },
 
   { id:"lualine", name:"lualine.nvim", repo:"nvim-lualine/lualine.nvim", commit:"221ce6b", cat:CAT.UI,
     tagline:"The statusline at the bottom (mode, file, git, diagnostics).",
@@ -626,6 +666,24 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
     body:`<p>Upgrades Neovim's plain input prompts and selection menus (like the rename box or code-action list) into nicer floating windows.</p>`,
     keymaps:[["—","Automatic UI upgrade"]],
     code:`return { "stevearc/dressing.nvim", event = "VeryLazy" }` },
+
+  { id:"noice", name:"noice.nvim", repo:"folke/noice.nvim", commit:"7bfd942", cat:CAT.UI,
+    tagline:"Centered floating command line — the \"command palette\" look.",
+    keywords:"noice cmdline command palette popup popupmenu ui",
+    body:`<p>Replaces the <code>:</code> command line at the bottom of the screen with a floating box near the top, with the completion menu attached underneath as one block — the <code>command_palette</code> preset. Searches with <code>/</code> and <code>?</code> deliberately stay at the bottom (<code>bottom_search</code>) where you can see the matches they're moving through.</p>
+      <p><strong>This is not what dressing.nvim does.</strong> Dressing owns <code>vim.ui.input</code> and <code>vim.ui.select</code> — the LSP rename box, code-action lists. The <code>:</code> cmdline is a separate UI layer that only noice replaces, so the two coexist rather than overlap.</p>
+      <p>Scoped narrowly on purpose: <code>messages</code>, <code>notify</code> and the LSP <code>progress</code>/<code>hover</code>/<code>signature</code> handlers are all left <em>off</em>, because taking those over changes how every error and <code>:messages</code> behaves. Only the cmdline and popupmenu are routed through noice.</p>
+      <p>It needs the <code>regex</code> treesitter parser — noice highlights the cmdline with treesitter, and without it the pattern in <code>:%s/foo/bar</code> renders unhighlighted.</p>`,
+    keymaps:[
+      [":","Opens the floating cmdline"],
+      ["/ or ?","Search — stays at the bottom by design"]
+    ],
+    code:`opts = {
+  cmdline = { enabled = true, view = "cmdline_popup" },
+  messages = { enabled = false },  -- left on Neovim defaults
+  notify   = { enabled = false },
+  presets  = { command_palette = true, bottom_search = true },
+}` },
 
   { id:"devicons", name:"nvim-web-devicons", repo:"nvim-tree/nvim-web-devicons", commit:"2ae6958", cat:CAT.UI,
     tagline:"File-type icons used across the UI.",
@@ -724,6 +782,10 @@ const KEYMAPS = [
   {k:"ys / cs / ds", d:"Add / change / delete surround", g:"Editing", m:"n"},
   {k:"s / ss / S", d:"Substitute with motion / line / to-EOL", g:"Editing", m:"n"},
   {k:"&lt;leader&gt;sm", d:"Maximize / restore split", g:"Editing", m:"n"},
+  {k:"&lt;Tab&gt; / &lt;S-Tab&gt;", d:"Tab out past a closing bracket or quote", g:"Editing", m:"i"},
+  {k:"&lt;C-t&gt; / &lt;C-d&gt;", d:"Indent / dedent (tabout fallback when there's nothing to jump)", g:"Editing", m:"i"},
+  {k:"&lt;C-\\&gt;", d:"Toggle the terminal split open / closed", g:"Terminal", m:"n/i"},
+  {k:"&lt;C-\\&gt;&lt;C-n&gt;", d:"Leave terminal insert mode", g:"Terminal", m:"t"},
   {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits", g:"Windows", m:"n"},
   // sessions
   {k:"&lt;leader&gt;wr / ws", d:"Restore / save session", g:"Session", m:"n"},
