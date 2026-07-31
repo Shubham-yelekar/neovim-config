@@ -59,8 +59,13 @@ New-Item -ItemType SymbolicLink `
 ```
 
 Both platforms need a **Nerd Font** — powerlevel10k, fastfetch, lualine and
-nvim-tree all draw glyphs that plain fonts don't have. Install
-`JetBrainsMono Nerd Font` and the configs pick it up.
+nvim-tree all draw glyphs that plain fonts don't have.
+
+WezTerm doesn't need one installed: `wezterm/font/` ships the TTF and
+`config.font_dirs = { "font" }` loads it from beside the config, so the terminal
+renders glyphs correctly on a fresh machine with nothing set up. That only covers
+WezTerm's own window — install `JetBrainsMono Nerd Font` system-wide anyway if
+you want other terminals or editors to show the same glyphs.
 
 ## Shell parity
 

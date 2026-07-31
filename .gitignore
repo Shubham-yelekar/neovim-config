@@ -9,3 +9,9 @@ desktop.ini
 # Shell history - personal, churns on every command, and this repo is public
 zsh/.zsh_history
 zsh/.zhistory
+
+# Background images - 38MB of JPEGs that wezterm.lua never references. They stay
+# on disk (the symlink still reaches them) but a public repo shouldn't carry
+# them. wezterm/font/ is NOT ignored: font_dirs = { "font" } needs it committed,
+# otherwise the config falls back to a system font on a fresh machine.
+wezterm/bg/

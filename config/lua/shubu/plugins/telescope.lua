@@ -54,8 +54,8 @@ return {
 				previewer = false,
 			}))
 		end, { desc = "Fuzzy find in buffer" })
+		vim.keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
 		vim.keymap.set("n", "<leader>fn", function()
-			keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
 			builtin.find_files({ cwd = vim.fn.stdpath("config") })
 		end, { desc = "Neovim config files" })
 	end,

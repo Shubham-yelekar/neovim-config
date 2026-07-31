@@ -27,7 +27,16 @@ vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz") -- Previous location list i
 
 vim.keymap.set("n", "<leader>cc", "<cmd>!php-cs-fixer fix % --using-cache=no<CR>") -- Format PHP file
 
-vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left>]]) -- Replace word under cursor
+-- Deliberately NOT silent: this leaves you sitting in the command line with the
+-- cursor parked between the two slashes, waiting for the replacement text. The
+-- desc is what which-key shows -- without it the menu prints the raw
+-- :%s/\<<C-R><C-W>\>//gI right-hand side, which is unreadable.
+vim.keymap.set(
+  "n",
+  "<leader>s",
+  [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left>]],
+  { desc = "Replace word under cursor" }
+)
 
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true }) -- Make file executable
 
