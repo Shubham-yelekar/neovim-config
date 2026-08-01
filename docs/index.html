@@ -489,13 +489,11 @@ keymap.set("n", "[t", function() todo_comments.jump_prev() end)` },
   { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"61df849", cat:CAT.EDIT,
     tagline:"Accurate syntax highlighting & code understanding.",
     keywords:"treesitter syntax highlighting parser",
-    body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown, bash and regex.</p>
-      <p>The <code>regex</code> parser isn't for editing regexes — it's there for <a href="#noice">noice</a>, which highlights the floating cmdline with treesitter. Without it the pattern in <code>:%s/foo/bar</code> renders unhighlighted.</p>`,
+    body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown and bash.</p>`,
     keymaps:[[":TSUpdate","Update installed parsers"]],
     code:`require("nvim-treesitter").install({
   "lua", "vim", "javascript", "typescript", "tsx",
   "html", "css", "json", "markdown", "bash",
-  "regex", -- needed by noice for cmdline highlighting
 })` },
 
   { id:"autotag", name:"nvim-ts-autotag", repo:"windwp/nvim-ts-autotag", commit:"88c1453", cat:CAT.EDIT,
@@ -667,22 +665,21 @@ vim.cmd("colorscheme catppuccin-mocha")` },
     keymaps:[["—","Automatic UI upgrade"]],
     code:`return { "stevearc/dressing.nvim", event = "VeryLazy" }` },
 
-  { id:"noice", name:"noice.nvim", repo:"folke/noice.nvim", commit:"7bfd942", cat:CAT.UI,
-    tagline:"Centered floating command line — the \"command palette\" look.",
-    keywords:"noice cmdline command palette popup popupmenu ui",
-    body:`<p>Replaces the <code>:</code> command line at the bottom of the screen with a floating box near the top, with the completion menu attached underneath as one block — the <code>command_palette</code> preset. Searches with <code>/</code> and <code>?</code> deliberately stay at the bottom (<code>bottom_search</code>) where you can see the matches they're moving through.</p>
-      <p><strong>This is not what dressing.nvim does.</strong> Dressing owns <code>vim.ui.input</code> and <code>vim.ui.select</code> — the LSP rename box, code-action lists. The <code>:</code> cmdline is a separate UI layer that only noice replaces, so the two coexist rather than overlap.</p>
-      <p>Scoped narrowly on purpose: <code>messages</code>, <code>notify</code> and the LSP <code>progress</code>/<code>hover</code>/<code>signature</code> handlers are all left <em>off</em>, because taking those over changes how every error and <code>:messages</code> behaves. Only the cmdline and popupmenu are routed through noice.</p>
-      <p>It needs the <code>regex</code> treesitter parser — noice highlights the cmdline with treesitter, and without it the pattern in <code>:%s/foo/bar</code> renders unhighlighted.</p>`,
-    keymaps:[
-      [":","Opens the floating cmdline"],
-      ["/ or ?","Search — stays at the bottom by design"]
-    ],
+  { id:"smear-cursor", name:"smear-cursor.nvim", repo:"sphamba/smear-cursor.nvim", commit:"9e9378d", cat:CAT.UI,
+    tagline:"Animated trail that follows the cursor as it jumps.",
+    keywords:"smear cursor animation trail motion smooth",
+    body:`<p>Draws a tapering streak between where the cursor was and where it landed, so big jumps stay easy to follow. The whole effect is painted with ordinary text characters — no graphics protocol — so it works in any terminal.</p>
+      <p><code>stiffness</code> and <code>trailing_stiffness</code> are dropped to <code>0.5</code> (defaults <code>0.6</code>/<code>0.45</code>). Equal and lower means the tail lags further behind and settles more slowly: a longer, lazier smear.</p>
+      <p><strong>Two settings exist because of this config specifically.</strong> The shading normally uses block characters from the Legacy Computing range (U+1FB00), which JetBrainsMono Nerd Font doesn't ship — so <code>legacy_computing_symbols_support</code> stays <code>false</code> to avoid rendering the trail as missing glyphs. With that off the plugin fakes shading by painting cells in the background colour, which it reads from <code>Normal</code> — and catppuccin leaves that unset under <code>transparent_background</code>. Without <code>transparent_bg_fallback_color</code> the trail smears black boxes across the transparent window, so it's pinned to mocha's base <code>#1e1e2e</code>.</p>`,
+    keymaps:[["—","No keymaps — it just runs"]],
     code:`opts = {
-  cmdline = { enabled = true, view = "cmdline_popup" },
-  messages = { enabled = false },  -- left on Neovim defaults
-  notify   = { enabled = false },
-  presets  = { command_palette = true, bottom_search = true },
+  smear_between_buffers = true,
+  smear_between_neighbor_lines = true,
+  scroll_buffer_space = true,
+  legacy_computing_symbols_support = false,  -- font lacks U+1FB00 blocks
+  transparent_bg_fallback_color = "#1e1e2e", -- catppuccin mocha base
+  stiffness = 0.5,
+  trailing_stiffness = 0.5,
 }` },
 
   { id:"devicons", name:"nvim-web-devicons", repo:"nvim-tree/nvim-web-devicons", commit:"2ae6958", cat:CAT.UI,

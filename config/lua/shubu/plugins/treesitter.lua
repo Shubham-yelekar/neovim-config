@@ -18,9 +18,6 @@ return {
             "json",
             "markdown",
             "bash",
-            -- noice highlights the cmdline with treesitter; without `regex`
-            -- the pattern in :%s/foo/bar and friends renders unhighlighted.
-            "regex",
         })
         vim.api.nvim_create_autocmd("FileType", {
             callback = function()
