@@ -51,7 +51,7 @@ Need a Nerd Font. Ghostty is set to `Maple Mono NF`; install that (or change `ma
 
 Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in `~/Developer` and lets tmux own tabs/panes. Bloom + modified-retro shaders are on; others are commented in `mac/ghostty/modules/shaders.config`.
 
-📖 **Neovim reference:** [`docs/index.html`](docs/index.html)
+📖 **Mac nvim + tmux reference:** [`docs/index.html`](docs/index.html)
 
 ## Windows
 

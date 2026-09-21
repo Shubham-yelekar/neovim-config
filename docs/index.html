@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Neovim Config Docs — shubu</title>
-<meta name="description" content="Personal reference for my Neovim configuration: every plugin, keymap, and option explained." />
+<title>Mac Config Docs — nvim + tmux</title>
+<meta name="description" content="Personal reference for Mac Neovim and tmux: plugins, keymaps, panes, and options." />
 <style>
   /* ---------- Catppuccin palette (Mocha = dark, Latte = light) ---------- */
   :root[data-theme="dark"]{
@@ -145,6 +145,7 @@
   .res .type.Plugin{background:color-mix(in srgb,var(--blue) 20%,transparent);color:var(--blue)}
   .res .type.Keymap{background:color-mix(in srgb,var(--green) 20%,transparent);color:var(--green)}
   .res .type.Guide{background:color-mix(in srgb,var(--mauve) 20%,transparent);color:var(--mauve)}
+  .res .type.Tmux{background:color-mix(in srgb,var(--peach) 20%,transparent);color:var(--peach)}
   .res .rtitle{font-size:14px;color:var(--text);font-weight:600}
   .res .rtitle.mono{font-family:"JetBrains Mono",monospace;font-size:13px}
   .res .rsub{font-size:12px;color:var(--overlay);margin-left:auto;text-align:right;flex-shrink:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -167,10 +168,10 @@
 <body>
   <div class="topbar">
     <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Menu">☰</button>
-    <div class="brand"><span class="dot"></span> <span class="full">Neovim Config&nbsp;·&nbsp;</span>shubu</div>
+    <div class="brand"><span class="dot"></span> <span class="full">Mac config&nbsp;·&nbsp;</span>shubu</div>
     <div class="grow"></div>
     <button class="search-btn" id="searchBtn">
-      <span>🔍</span><span class="placeholder">Search topics…</span>
+      <span>🔍</span><span class="placeholder">Search nvim, tmux, keys…</span>
       <span class="kbd" id="kbdHint">Ctrl K</span>
     </button>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">🌙</button>
@@ -184,7 +185,7 @@
   <!-- Cmd+K palette -->
   <div class="palette-overlay" id="paletteOverlay">
     <div class="palette" role="dialog" aria-modal="true">
-      <input id="paletteInput" type="text" placeholder="Search plugins, keymaps, guides…" autocomplete="off" spellcheck="false" />
+      <input id="paletteInput" type="text" placeholder="Search plugins, tmux, keymaps…" autocomplete="off" spellcheck="false" />
       <div class="results" id="results"></div>
       <div class="palette-foot">
         <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
@@ -210,7 +211,7 @@ const GUIDES = [
         <li><strong>Frontend:</strong> React, Next.js, Tailwind, Angular (14+)</li>
         <li><strong>Editor base:</strong> Neovim 0.12.4, plugins managed by <a href="https://github.com/folke/lazy.nvim" target="_blank">lazy.nvim</a></li>
         <li><strong>Leader key:</strong> <kbd>Space</kbd> — most custom shortcuts start with it</li>
-        <li><strong>Terminal:</strong> Ghostty (shaders) with tmux owning panes — not WezTerm on this machine</li>
+        <li><strong>Terminal:</strong> Ghostty with <code>cursor-smear.glsl</code> (Neovim smear-cursor is off) and tmux owning panes</li>
       </ul>
       <div class="note tip"><strong>Tip:</strong> Press <span class="kbd">Ctrl K</span> (or <span class="kbd">⌘ K</span> on Mac) anywhere to fuzzy-search every plugin, keymap and topic.</div>
     `
@@ -307,6 +308,95 @@ const GUIDES = [
       <p>The file also maps <code>j</code>/<code>k</code> to <code>gj</code>/<code>gk</code> so moving down/up steps through <em>wrapped</em> visual lines, not just real lines.</p>
     `
   }
+];
+
+const TMUX_GUIDES = [
+  {
+    id:"tmux-overview", title:"tmux on this Mac", nav:"tmux overview",
+    html:`
+      <p class="lead">Ghostty is the terminal; <strong>tmux owns tabs and panes</strong>. Ghostty's own split/tab keys are cleared. Prefix is <kbd>Ctrl-Space</kbd> (not Ctrl-B). Most pane keys skip the prefix and use <kbd>Ctrl-Alt</kbd>.</p>
+      <p>Config lives in <code>mac/tmux/</code>. Reload with <kbd>Prefix r</kbd> — restarting Ghostty is not enough.</p>
+      <pre><code>mac/tmux/
+├── tmux.conf              &larr; sources the modules below, binds Prefix+r
+└── conf/
+    ├── options.conf       &larr; prefix, 256color, mouse, clipboard
+    ├── copy-mode.conf     &larr; vi copy mode
+    ├── pane.conf          &larr; splits C-M-\\ / C-M--, nav, zoom
+    ├── window.conf        &larr; also pane maps (C-M-s / C-M-v splits)
+    ├── popup.conf         &larr; Ctrl-\` scratch terminal
+    ├── plugins.conf       &larr; TPM, catppuccin, resurrect, continuum
+    └── status.conf        &larr; top bar, mocha colours
+scripts/                   &larr; pane-nav, popup-term, open-url, clipboard</code></pre>
+      <div class="note"><strong>Neovim + tmux:</strong> <code>scripts/pane-nav.sh</code> looks at the real foreground process. If you are in nvim, Ctrl-Alt-hjkl is forwarded into Neovim splits; otherwise it moves tmux panes. It does not trust <code>@pane-is-vim</code>.</div>
+    `
+  },
+  {
+    id:"tmux-prefix", title:"Prefix, options, plugins", nav:"Prefix & plugins",
+    html:`
+      <h3>Options</h3>
+      <table>
+        <tr><th>Setting</th><th>Value</th><th>What it does</th></tr>
+        <tr><td class="mono">prefix</td><td class="mono">C-Space</td><td>Default Ctrl-B is unbound. Press twice to send Ctrl-Space through</td></tr>
+        <tr><td class="mono">base-index / pane-base-index</td><td class="mono">1</td><td>Windows and panes number from 1</td></tr>
+        <tr><td class="mono">history-limit</td><td class="mono">1000000</td><td>Long scrollback for logs and AI CLIs</td></tr>
+        <tr><td class="mono">mouse</td><td class="mono">on</td><td>Click, drag-select, wheel into copy-mode</td></tr>
+        <tr><td class="mono">set-clipboard</td><td class="mono">on</td><td>OSC 52 — Neovim can yank to the system clipboard</td></tr>
+        <tr><td class="mono">escape-time / repeat-time</td><td class="mono">0</td><td>No lag after Esc or repeating a bind</td></tr>
+        <tr><td class="mono">detach-on-destroy</td><td class="mono">off</td><td>Closing the last window jumps to another session (popup sessions stay)</td></tr>
+      </table>
+      <h3>TPM plugins</h3>
+      <p>Not committed. Clone TPM once, then <kbd>Prefix I</kbd>. Flavour is Catppuccin mocha. Resurrect saves pane contents and nvim sessions; continuum autosaves every 15 minutes and restores on start.</p>
+      <table>
+        <tr><th>Keys</th><th>Action</th></tr>
+        <tr><td class="keys"><code>Prefix I</code></td><td>Install plugins</td></tr>
+        <tr><td class="keys"><code>Prefix U</code></td><td>Update plugins</td></tr>
+        <tr><td class="keys"><code>Prefix Ctrl-s</code></td><td>Resurrect: save now</td></tr>
+        <tr><td class="keys"><code>Prefix Ctrl-r</code></td><td>Resurrect: restore (also <code>Prefix r</code> reloads tmux.conf — different)</td></tr>
+      </table>
+    `
+  },
+  {
+    id:"tmux-panes", title:"Panes, windows, popup", nav:"Panes & popup",
+    html:`
+      <p>No prefix on these. Ghostty Option-as-alt is on so Ctrl-Alt reaches tmux.</p>
+      <h3>Panes</h3>
+      <table>
+        <tr><th>Keys</th><th>Action</th></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-\\</code></td><td>Split vertical (same cwd) — <code>pane.conf</code></td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt--</code></td><td>Split horizontal — <code>pane.conf</code></td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-s</code></td><td>Split vertical — <code>window.conf</code></td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-v</code></td><td>Split horizontal — <code>window.conf</code></td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-w</code></td><td>Kill pane</td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-h/j/k/l</code></td><td>Move: nvim split if nvim is in front, else tmux pane</td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-arrows</code></td><td>Resize that edge (same nvim-or-tmux helper)</td></tr>
+        <tr><td class="keys"><code>Ctrl-Alt-b</code></td><td>Zoom / unzoom pane</td></tr>
+        <tr><td class="keys"><code>Ctrl-click</code></td><td>Open URL under cursor</td></tr>
+      </table>
+      <p>Default tmux window keys still work with the prefix: <code>Prefix c</code> new window, <code>Prefix n/p</code> next/prev, <code>Prefix 1–9</code> jump. <code>window.conf</code> currently repeats pane maps rather than adding extra window binds.</p>
+      <h3>Scratch popup</h3>
+      <p><kbd>Ctrl-grave</kbd> (the backtick key). Ghostty sends a CSI-u sequence so tmux receives it as Ctrl+grave. Opens a floating shell in the pane's directory; press again to detach so jobs keep running. Sessions are named <code>popup-*</code>.</p>
+      <h3>Copy mode (Prefix v)</h3>
+      <p>Vi keys. <code>v</code> select, <code>C-v</code> block, <code>y</code> yank and stay, <code>Enter</code> yank and leave, <code>Y</code> yank line. <code>[</code> / <code>]</code> jump between shell prompts.</p>
+    `
+  }
+];
+
+const TMUX_KEYMAPS = [
+  {k:"&lt;C-Space&gt;", d:"tmux prefix (not Ctrl-B)", g:"tmux", m:"tmux"},
+  {k:"Prefix r", d:"Reload tmux.conf", g:"tmux", m:"tmux"},
+  {k:"Prefix v", d:"Enter copy mode", g:"tmux", m:"tmux"},
+  {k:"Prefix I / U", d:"TPM install / update plugins", g:"tmux", m:"tmux"},
+  {k:"Prefix C-s / C-r", d:"Resurrect save / restore", g:"tmux", m:"tmux"},
+  {k:"Prefix c", d:"New window (tmux default)", g:"tmux", m:"tmux"},
+  {k:"Prefix n / p", d:"Next / previous window", g:"tmux", m:"tmux"},
+  {k:"&lt;C-M-\\\\&gt; / &lt;C-M--&gt;", d:"Split vertical / horizontal (pane.conf)", g:"tmux", m:"n"},
+  {k:"&lt;C-M-s&gt; / &lt;C-M-v&gt;", d:"Split vertical / horizontal (window.conf)", g:"tmux", m:"n"},
+  {k:"&lt;C-M-w&gt;", d:"Kill pane", g:"tmux", m:"n"},
+  {k:"&lt;C-M-h/j/k/l&gt;", d:"Move: nvim split or tmux pane", g:"tmux", m:"n"},
+  {k:"&lt;C-M-Left/Down/Up/Right&gt;", d:"Resize pane (or nvim split)", g:"tmux", m:"n"},
+  {k:"&lt;C-M-b&gt;", d:"Zoom / unzoom pane", g:"tmux", m:"n"},
+  {k:"&lt;C-`&gt;", d:"Toggle scratch popup terminal", g:"tmux", m:"n"},
+  {k:"v / y / Enter", d:"Copy-mode: select / yank stay / yank leave", g:"tmux", m:"copy"}
 ];
 
 // ---- Plugins (grouped by category, order preserved) ----
@@ -826,6 +916,15 @@ function buildSidebar(){
   const km = el("a","side-link"); km.href="#keymaps"; km.dataset.target="keymaps";
   km.innerHTML = `Keymaps cheatsheet <span class="tag">${KEYMAPS.length}</span>`; g.appendChild(km);
   nav.appendChild(g);
+  const tg = el("div","side-group");
+  tg.innerHTML = `<div class="label">tmux</div>`;
+  TMUX_GUIDES.forEach(x=>{
+    const a = el("a","side-link"); a.href="#"+x.id; a.dataset.target=x.id; a.textContent=x.nav||x.title; tg.appendChild(a);
+  });
+  const tkm = el("a","side-link"); tkm.href="#tmux-keymaps"; tkm.dataset.target="tmux-keymaps";
+  tkm.innerHTML = `tmux keys <span class="tag">${TMUX_KEYMAPS.length}</span>`;
+  tg.appendChild(tkm);
+  nav.appendChild(tg);
   // plugins by category
   catOrder.forEach(cat=>{
     const items = PLUGINS.filter(p=>p.cat===cat);
@@ -847,7 +946,7 @@ function buildContent(){
   const c = $("#content"); c.innerHTML="";
   // hero
   const hero = el("section","doc"); hero.id="top";
-  hero.innerHTML = `<h1>Neovim Config Reference</h1>`;
+  hero.innerHTML = `<h1>Mac config — Neovim + tmux</h1>`;
   c.appendChild(hero);
   // guides
   GUIDES.forEach(x=>{
@@ -855,6 +954,21 @@ function buildContent(){
     s.innerHTML = `<h2 class="sec-title">${x.title}</h2>${x.html}`;
     c.appendChild(s);
   });
+  TMUX_GUIDES.forEach(x=>{
+    const s = el("section","doc"); s.id=x.id;
+    s.innerHTML = `<h2 class="sec-title">${x.title}</h2>${x.html}`;
+    c.appendChild(s);
+  });
+  const tkm = el("section","doc"); tkm.id="tmux-keymaps";
+  let tkmHtml = `<h2 class="sec-title">tmux keymaps</h2>
+    <p>Prefix is <strong>Ctrl-Space</strong>. Pane chords use <strong>Ctrl-Alt</strong> (Ghostty <code>macos-option-as-alt</code>). Search these with <span class="kbd">Ctrl K</span>.</p>
+    <table><tr><th>Keys</th><th>Mode</th><th>Action</th></tr>`;
+  TMUX_KEYMAPS.forEach((x,i)=>{
+    tkmHtml += `<tr class="km-row" id="tkm-${i}"><td class="keys"><code>${x.k}</code></td>
+      <td><span class="mode-pill">${x.m}</span></td><td>${x.d}</td></tr>`;
+  });
+  tkmHtml += `</table>`;
+  tkm.innerHTML = tkmHtml; c.appendChild(tkm);
   // keymaps cheatsheet
   const kms = el("section","doc"); kms.id="keymaps";
   const groups = [...new Set(KEYMAPS.map(x=>x.g))];
@@ -891,7 +1005,7 @@ function buildContent(){
   });
   // footer
   const f = el("section","doc");
-  f.innerHTML = `<hr class="hr"><p style="font-size:13px">Handwritten reference for <code>mac/nvim/</code> · versions pinned in <code>lazy-lock.json</code>. Update this page when you change your setup.</p>`;
+  f.innerHTML = `<hr class="hr"><p style="font-size:13px">Handwritten reference for <code>mac/nvim/</code> and <code>mac/tmux/</code>. Update this page when you change your setup.</p>`;
   c.appendChild(f);
 }
 
@@ -919,12 +1033,16 @@ function setupScrollSpy(){
    ============================================================ */
 function buildIndex(){
   const idx = [];
-  GUIDES.forEach(x=> idx.push({type:"Guide", title:x.title, sub:"Guide", id:x.id, hay:(x.title).toLowerCase()}));
-  idx.push({type:"Guide", title:"Keymaps cheatsheet", sub:"Reference", id:"keymaps", hay:"keymaps cheatsheet shortcuts keys reference"});
+  GUIDES.forEach(x=> idx.push({type:"Guide", title:x.title, sub:"Neovim", id:x.id, hay:(x.title+" nvim neovim").toLowerCase()}));
+  TMUX_GUIDES.forEach(x=> idx.push({type:"Tmux", title:x.title, sub:"tmux", id:x.id, hay:(x.title+" tmux pane prefix popup").toLowerCase()}));
+  idx.push({type:"Guide", title:"Keymaps cheatsheet", sub:"Neovim", id:"keymaps", hay:"keymaps cheatsheet shortcuts keys reference"});
+  idx.push({type:"Tmux", title:"tmux keymaps", sub:"tmux", id:"tmux-keymaps", hay:"tmux keymaps prefix panes popup copy"});
   PLUGINS.forEach(p=> idx.push({type:"Plugin", title:p.name, sub:p.cat, id:p.id, mono:false,
     hay:(p.name+" "+p.cat+" "+p.tagline+" "+(p.keywords||"")).toLowerCase()}));
   KEYMAPS.forEach((x,i)=> idx.push({type:"Keymap", title:stripTags(x.k), sub:x.d, id:"km-"+i, mono:true,
     hay:(stripTags(x.k)+" "+x.d+" "+x.g).toLowerCase()}));
+  TMUX_KEYMAPS.forEach((x,i)=> idx.push({type:"Keymap", title:stripTags(x.k), sub:x.d, id:"tkm-"+i, mono:true,
+    hay:(stripTags(x.k)+" "+x.d+" tmux "+x.g).toLowerCase()}));
   return idx;
 }
 function stripTags(s){ return s.replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
@@ -989,8 +1107,8 @@ function go(r){
   closePalette();
   const target = document.getElementById(r.id);
   if(target){
-    target.scrollIntoView({behavior:"smooth", block: r.id.startsWith("km-")?"center":"start"});
-    if(r.id.startsWith("km-")){
+    target.scrollIntoView({behavior:"smooth", block: (r.id.startsWith("km-")||r.id.startsWith("tkm-"))?"center":"start"});
+    if(r.id.startsWith("km-") || r.id.startsWith("tkm-")){
       target.classList.add("flash");
       setTimeout(()=>target.classList.remove("flash"), 1600);
     }
