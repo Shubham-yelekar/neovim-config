@@ -204,7 +204,7 @@ const GUIDES = [
     id: "overview", title: "Overview", nav: "Overview",
     html: `
       <p class="lead">This is a living reference for my personal Neovim setup. I use Neovim to get comfortable with the command line, git, and Vim motions — this site explains <strong>what every piece does</strong> so I can actually understand my config instead of copy-pasting it.</p>
-      <p>Everything here is generated from the real config files in the <code>config/</code> folder of this repo. Each plugin lists what it does, its repo, the exact locked commit, its keymaps, and a code snippet.</p>
+      <p>This is a handwritten reference for the Neovim files in <code>mac/nvim/</code>. Each plugin lists what it does, its repo, the locked commit, its keymaps, and a code snippet. Refresh this page when the Mac nvim config changes.</p>
       <h3>The stack it's built for</h3>
       <ul>
         <li><strong>Frontend:</strong> React, Next.js, Tailwind, Angular (14+)</li>
@@ -218,7 +218,7 @@ const GUIDES = [
     id: "structure", title: "How the config is structured", nav: "Project structure",
     html: `
       <p>Neovim loads a single entry file, which pulls in everything else. The folders are split so each concern lives on its own.</p>
-      <pre><code>config/                      &larr; junctioned to ~/AppData/Local/nvim (Win) or ~/.config/nvim (Mac)
+      <pre><code>mac/nvim/                    &larr; symlink to ~/.config/nvim on the Mac
 ├── init.lua                 &larr; the entry point Neovim runs first
 └── lua/shubu/
     ├── core/
@@ -879,7 +879,7 @@ function buildContent(){
   });
   // footer
   const f = el("section","doc");
-  f.innerHTML = `<hr class="hr"><p style="font-size:13px">Generated from the config in <code>config/</code> · versions pinned in <code>lazy-lock.json</code>. Update this page when you change your setup.</p>`;
+  f.innerHTML = `<hr class="hr"><p style="font-size:13px">Handwritten reference for <code>mac/nvim/</code> · versions pinned in <code>lazy-lock.json</code>. Update this page when you change your setup.</p>`;
   c.appendChild(f);
 }
 

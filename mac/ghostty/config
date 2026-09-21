@@ -1,0 +1,51 @@
+# ╭─────────────────────────────────────────────────────╮
+# │      Ghostty Configuration (Modular Entry Point)    │
+# │   Actual settings are split into modules/*.config   │
+# ╰─────────────────────────────────────────────────────╯
+# Ghostty loads additional configuration files using
+# config-file. Relative paths start from ~/.config/ghostty/
+
+
+# ──── Appearance (Theme, Cursor, Font, Transparency) ────
+config-file = modules/appearance.config
+
+# ──── Window (Size, Shell, Mouse, macOS) ────
+config-file = modules/window.config
+
+# ──── Common Keybindings
+#      (Tabs, Font Zoom, CSI-u Input, Paste) ────
+config-file = modules/keys-common.config
+
+# ──── Visual Effects (Shaders) ────
+config-file = modules/shaders.config
+
+# ──── Matugen Dynamic Theme Colors
+#      (Overrides the theme defined in appearance.config)
+#
+# A '?' prefix means the file is optional.
+# If it doesn't exist (for example, after a fresh clone before
+# running Matugen), Ghostty silently skips it and continues
+# using the Catppuccin theme from appearance.config.
+config-file = ?modules/matugen-colors.config
+
+
+# ╭─────────────────────────────────────────────────────╮
+# │        Window Management Mode (Choose One)          │
+# ╰─────────────────────────────────────────────────────╯
+#
+# native:
+#   Use Ghostty's built-in tabs and splits.
+#   (Does not support smart split forwarding.
+#   See comments in keys-native.config.)
+#
+# tmux:
+#   Let tmux manage all tabs and panes.
+#   tmux conditional keybindings provide seamless switching.
+#
+# Default is tmux mode.
+# To switch back to Ghostty's native mode:
+#   - Comment out the tmux line.
+#   - Uncomment the native line.
+
+# config-file = modules/keys-native.config
+config-file = modules/keys-tmux.config

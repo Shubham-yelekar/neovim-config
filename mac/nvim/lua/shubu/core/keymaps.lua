@@ -17,8 +17,17 @@ vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]]) -- Delete without yanking
 
 vim.keymap.set("i", "<C-c>", "<Esc>") -- Use Ctrl+C as Escape
 
-vim.keymap.set("n", "<C-j>", "<cmd>cnext<CR>zz") -- Next quickfix item
-vim.keymap.set("n", "<C-k>", "<cmd>cprev<CR>zz") -- Previous quickfix item
+-- Window navigation (also works from toggleterm via TermOpen maps)
+vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Window left" })
+vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Window down" })
+vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Window up" })
+vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Window right" })
+
+-- Same chords tmux forwards into Neovim (Ctrl+Alt+hjkl)
+vim.keymap.set("n", "<C-M-h>", "<C-w>h", { desc = "Window left" })
+vim.keymap.set("n", "<C-M-j>", "<C-w>j", { desc = "Window down" })
+vim.keymap.set("n", "<C-M-k>", "<C-w>k", { desc = "Window up" })
+vim.keymap.set("n", "<C-M-l>", "<C-w>l", { desc = "Window right" })
 
 vim.keymap.set("n", "Q", "<nop>") -- Disable Ex mode
 

@@ -4,7 +4,12 @@ return {
   dependencies = { "nvim-lua/plenary.nvim" },
   config = function()
     local harpoon = require("harpoon")
-    harpoon:setup()
+    harpoon:setup({
+      settings = {
+        -- Default is false: dd in the menu is discarded when you close it.
+        save_on_toggle = true,
+      },
+    })
 
     local keymap = vim.keymap
 

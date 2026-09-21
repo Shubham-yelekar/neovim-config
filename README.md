@@ -1,118 +1,81 @@
 # dotfiles
 
-Neovim, WezTerm, fastfetch and shell config — shared between a MacBook (M4, zsh)
-and a Windows 11 machine (PowerShell). One repo, both machines.
+Two machines, two stacks. They used to share WezTerm + Neovim. They don't anymore:
 
-📖 **Neovim reference:** [`docs/index.html`](docs/index.html) — a searchable page
-documenting every plugin, keymap and option. Open it in a browser, or serve it
-with GitHub Pages from the `docs/` folder.
+- **Mac (personal):** Ghostty (shaders) + tmux + Neovim — this is the setup I'm learning on.
+- **Windows (work):** WezTerm + PowerShell. Editor there is VS Code, not this Neovim config.
 
-## What's in here
+```
+mac/   nvim, ghostty, tmux, fastfetch
+win/   wezterm, powershell, fastfetch
+docs/  Neovim keymap/plugin reference (Mac nvim)
+```
 
-| Folder | Configures | macOS path | Windows path |
-|---|---|---|---|
-| [`config/`](config/) | Neovim | `~/.config/nvim` | `~\AppData\Local\nvim` |
-| [`wezterm/`](wezterm/) | WezTerm terminal | `~/.config/wezterm/` | `~\.config\wezterm\` |
-| [`fastfetch/`](fastfetch/) | fastfetch system info | `~/.config/fastfetch/` | `~\.config\fastfetch\` |
-| [`powershell/`](powershell/) | Shell — **Windows only** | — | `~\Documents\WindowsPowerShell\` |
+## Mac
 
-Neovim, WezTerm and fastfetch are shared by both machines. The shell is not: the
-Mac runs zsh (oh-my-zsh + powerlevel10k, configured outside this repo) and
-Windows runs PowerShell. The profile in `powershell/` is a deliberate port of
-that zsh setup — the table under [Shell parity](#shell-parity) records which
-piece maps to which, so the two stay in step.
+| Folder | Configures | Symlink to |
+|---|---|---|
+| [`mac/nvim/`](mac/nvim/) | Neovim | `~/.config/nvim` |
+| [`mac/ghostty/`](mac/ghostty/) | Ghostty + GLSL shaders | `~/.config/ghostty` |
+| [`mac/tmux/`](mac/tmux/) | tmux (TPM plugins stay untracked) | `~/.config/tmux` |
+| [`mac/fastfetch/`](mac/fastfetch/) | fastfetch | `~/.config/fastfetch` |
 
-## Install
-
-### macOS
+zsh (oh-my-zsh + powerlevel10k) is still configured outside this repo.
 
 ```sh
-brew install neovim wezterm fastfetch eza zoxide fzf fd chafa
+brew install neovim ghostty tmux fastfetch eza zoxide fzf fd chafa
 
 git clone https://github.com/Shubham-yelekar/neovim-config.git ~/dotfiles
 cd ~/dotfiles
-ln -s "$PWD/config"    ~/.config/nvim
-ln -s "$PWD/wezterm"   ~/.config/wezterm
-ln -s "$PWD/fastfetch" ~/.config/fastfetch
+
+# back up anything already at these paths first
+ln -sfn "$PWD/mac/nvim"     ~/.config/nvim
+ln -sfn "$PWD/mac/ghostty"  ~/.config/ghostty
+ln -sfn "$PWD/mac/tmux"     ~/.config/tmux
+ln -sfn "$PWD/mac/fastfetch" ~/.config/fastfetch
+
+# TPM — once, then Prefix+I inside tmux
+git clone --depth=1 --single-branch --no-tags \
+  https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
 ```
 
-The zsh side (oh-my-zsh, powerlevel10k, zsh-autosuggestions,
-zsh-syntax-highlighting) isn't tracked here — set it up separately and use
-[Shell parity](#shell-parity) to keep it aligned with the PowerShell profile.
+Need a Nerd Font. Ghostty is set to `Maple Mono NF`; install that (or change `mac/ghostty/modules/appearance.config`).
 
-### Windows
+Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in `~/Developer` and lets tmux own tabs/panes. Bloom + modified-retro shaders are on; others are commented in `mac/ghostty/modules/shaders.config`.
+
+📖 **Neovim reference:** [`docs/index.html`](docs/index.html)
+
+## Windows
+
+Work machine: VS Code for editing. This folder is the old WezTerm + PowerShell environment.
+
+| Folder | Configures | Symlink to |
+|---|---|---|
+| [`win/wezterm/`](win/wezterm/) | WezTerm | `~\.config\wezterm\` |
+| [`win/powershell/`](win/powershell/) | PowerShell profile | `~\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` |
+| [`win/fastfetch/`](win/fastfetch/) | fastfetch | `~\.config\fastfetch\` |
 
 ```powershell
-winget install Neovim.Neovim wez.wezterm Fastfetch-cli.Fastfetch `
+winget install wez.wezterm Fastfetch-cli.Fastfetch `
                eza-community.eza ajeetdsouza.zoxide junegunn.fzf `
                sharkdp.fd JanDeDobbeleer.OhMyPosh
 
 git clone https://github.com/Shubham-yelekar/neovim-config.git E:\dotfiles
 cd E:\dotfiles
-# needs an elevated shell, or Developer Mode enabled
-New-Item -ItemType SymbolicLink -Path "$env:LOCALAPPDATA\nvim"            -Target "$PWD\config"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\wezterm"  -Target "$PWD\wezterm"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\fastfetch" -Target "$PWD\fastfetch"
+# elevated shell, or Developer Mode
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\wezterm"  -Target "$PWD\win\wezterm"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\fastfetch" -Target "$PWD\win\fastfetch"
 New-Item -ItemType SymbolicLink `
   -Path   "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" `
-  -Target "$PWD\powershell\Microsoft.PowerShell_profile.ps1"
+  -Target "$PWD\win\powershell\Microsoft.PowerShell_profile.ps1"
 ```
 
-Both platforms need a **Nerd Font** — powerlevel10k, fastfetch, lualine and
-nvim-tree all draw glyphs that plain fonts don't have.
-
-WezTerm doesn't need one installed: `wezterm/font/` ships the TTF and
-`config.font_dirs = { "font" }` loads it from beside the config, so the terminal
-renders glyphs correctly on a fresh machine with nothing set up. That only covers
-WezTerm's own window — install `JetBrainsMono Nerd Font` system-wide anyway if
-you want other terminals or editors to show the same glyphs.
-
-## Shell parity
-
-The Mac's `.zshrc` and `powershell/Microsoft.PowerShell_profile.ps1` aim at the
-same experience through different machinery:
-
-| Behaviour | macOS (zsh) | Windows (PowerShell) |
-|---|---|---|
-| Prompt | oh-my-zsh + powerlevel10k (rainbow) | oh-my-posh, `powerlevel10k_rainbow` theme |
-| Autosuggestions | `zsh-autosuggestions` | PSReadLine `-PredictionSource History` |
-| Syntax highlighting | `zsh-syntax-highlighting` | PSReadLine `-Colors` (catppuccin mocha) |
-| Better `ls` | `alias ls="eza --icons=always"` | `ls`/`ll`/`la`/`lt` functions wrapping eza |
-| Better `cd` | `alias cd="z"` (zoxide) | `zoxide init powershell --cmd cd` |
-| History search on ↑/↓ | `bindkey '^[[A' history-search-backward` | `Set-PSReadLineKeyHandler UpArrow HistorySearchBackward` |
-| No duplicate history | `setopt hist_ignore_dups` | `-HistoryNoDuplicates` |
-| Node version manager | nvm | fnm *(not installed — commented out)* |
-
-PowerShell aliases can't carry arguments, which is why the eza entries are
-functions rather than `Set-Alias`.
-
-Extra on Windows (no zsh equivalent — they grew out of this machine's workflow):
-
-| | |
-|---|---|
-| `r` / `rv` | fuzzy-pick a git repo under the repo roots, `cd` there / and open nvim |
-| `s` / `sv` | fuzzy-pick from zoxide history, `cd` there / and open nvim |
-| `v` | open nvim at the current dir, or at a given path |
-| `ff` | run fastfetch on demand |
-| `Ctrl+g` | run the repo picker from any prompt |
+WezTerm loads the bundled JetBrainsMono Nerd Font from `win/wezterm/font/` and starts PowerShell so the profile (oh-my-posh, zoxide, eza, fzf pickers) actually runs.
 
 ## Notes
 
-- **Terminal ≠ shell.** WezTerm and Windows Terminal are terminal emulators —
-  they own the font, colors and transparency. PowerShell/zsh are the shells
-  running inside them, and they're what read the profiles above. WezTerm is set
-  to launch PowerShell on Windows precisely so the profile loads.
-- **Blur is per-platform.** `macos_window_background_blur` is macOS-only, so on
-  Windows it silently does nothing. The equivalent is `win32_system_backdrop`,
-  currently `"Mica"` (the other useful value is `"Acrylic"` — Mica tints from the
-  desktop wallpaper, Acrylic blurs whatever window is actually behind). Either
-  needs `window_background_opacity = 0`: the backdrop is painted behind the
-  window, so the window itself has to be transparent for it to show through.
-- **Catppuccin's scheme name isn't the repo name.** It registers
-  `catppuccin-mocha`/`-latte`/`-frappe`/`-macchiato`. `catppuccin-nvim` doesn't
-  exist and raises `E185`.
-- **fastfetch's chafa logo doesn't render on Windows.** The winget build accepts
-  the config but falls back to the built-in logo; the same config draws the
-  image fine on macOS.
-- `config/lazy-lock.json` pins every Neovim plugin to a commit. Commit it after
-  running `:Lazy update` so both machines stay on the same versions.
+- **Do not share one WezTerm config across both machines anymore.** Mac is Ghostty; Windows is WezTerm.
+- **Blur is Windows-only in `win/wezterm`.** `win32_system_backdrop = "Acrylic"` needs `window_background_opacity` low enough for the backdrop to show. `macos_window_background_blur` in that file is leftover and unused on Windows.
+- **fastfetch's chafa logo** is flaky on the winget build; same config draws the image on macOS.
+- `mac/nvim/lazy-lock.json` pins Neovim plugins. Commit it after `:Lazy update`.
+- tmux plugins live in `~/.config/tmux/plugins/` and are gitignored. Reinstall with TPM on a new Mac.

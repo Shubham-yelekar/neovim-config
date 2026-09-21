@@ -15,7 +15,7 @@ set.background = "dark" -- Use dark theme variants
 set.signcolumn = "yes" -- Always show sign column
 
 set.cursorline = true -- Highlight current line
-set.colorcolumn = "80" -- Show guide at column 80
+-- set.colorcolumn = "80" -- Show guide at column 80
 
 set.clipboard:append("unnamedplus") -- Use system clipboard
 
