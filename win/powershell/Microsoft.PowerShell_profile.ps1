@@ -26,13 +26,14 @@ function ff { fastfetch -c "$env:USERPROFILE/.config/fastfetch/config.jsonc" @ar
 
 # --- zoxide: tracks dirs you visit by frecency (recent + frequent) ---
 # `--cmd cd` makes zoxide take over `cd` entirely, matching `alias cd="z"`
-# in zsh/.zshrc. Plain `cd <path>` still works; `cdi` is the interactive picker.
+# in mac/zsh/.zshrc. Plain `cd <path>` still works; `cdi` is the interactive picker.
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (& { (zoxide init powershell --cmd cd | Out-String) })
 }
 
 # ============================================================================
-# zsh parity - mirrors zsh/.zshrc so Windows feels like the mac shell.
+# zsh parity - a PowerShell port of mac/zsh/.zshrc so Windows feels similar.
+# Not the same file. Do not source zsh from here.
 # ============================================================================
 
 # --- zsh-autosuggestions equivalent -----------------------------------------

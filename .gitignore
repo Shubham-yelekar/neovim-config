@@ -10,8 +10,8 @@ desktop.ini
 nvim.log
 
 # Shell history - personal, churns on every command, and this repo is public
-zsh/.zsh_history
-zsh/.zhistory
+mac/zsh/.zsh_history
+mac/zsh/.zhistory
 
 # TPM installs plugins here. Clone tpm on a fresh machine; do not commit it.
 mac/tmux/plugins/
