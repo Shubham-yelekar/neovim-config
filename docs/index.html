@@ -204,12 +204,13 @@ const GUIDES = [
     id: "overview", title: "Overview", nav: "Overview",
     html: `
       <p class="lead">This is a living reference for my personal Neovim setup. I use Neovim to get comfortable with the command line, git, and Vim motions — this site explains <strong>what every piece does</strong> so I can actually understand my config instead of copy-pasting it.</p>
-      <p>This is a handwritten reference for the Neovim files in <code>mac/nvim/</code>. Each plugin lists what it does, its repo, the locked commit, its keymaps, and a code snippet. Refresh this page when the Mac nvim config changes.</p>
+      <p>This is a handwritten reference for the Neovim files in <code>mac/nvim/</code> (the Mac personal setup: Ghostty + tmux). Windows at work uses VS Code, not this config. Refresh this page when the Mac nvim files change.</p>
       <h3>The stack it's built for</h3>
       <ul>
         <li><strong>Frontend:</strong> React, Next.js, Tailwind, Angular (14+)</li>
-        <li><strong>Editor base:</strong> Neovim 0.12+, plugins managed by <a href="https://github.com/folke/lazy.nvim" target="_blank">lazy.nvim</a></li>
+        <li><strong>Editor base:</strong> Neovim 0.12.4, plugins managed by <a href="https://github.com/folke/lazy.nvim" target="_blank">lazy.nvim</a></li>
         <li><strong>Leader key:</strong> <kbd>Space</kbd> — most custom shortcuts start with it</li>
+        <li><strong>Terminal:</strong> Ghostty (shaders) with tmux owning panes — not WezTerm on this machine</li>
       </ul>
       <div class="note tip"><strong>Tip:</strong> Press <span class="kbd">Ctrl K</span> (or <span class="kbd">⌘ K</span> on Mac) anywhere to fuzzy-search every plugin, keymap and topic.</div>
     `
@@ -218,7 +219,7 @@ const GUIDES = [
     id: "structure", title: "How the config is structured", nav: "Project structure",
     html: `
       <p>Neovim loads a single entry file, which pulls in everything else. The folders are split so each concern lives on its own.</p>
-      <pre><code>mac/nvim/                    &larr; symlink to ~/.config/nvim on the Mac
+      <pre><code>mac/nvim/                    &larr; Mac Neovim (symlink or copy of ~/.config/nvim)
 ├── init.lua                 &larr; the entry point Neovim runs first
 └── lua/shubu/
     ├── core/
@@ -293,7 +294,7 @@ const GUIDES = [
         <tr><td class="mono">ignorecase + smartcase</td><td class="mono">true</td><td>Search is case-insensitive, unless you type a capital</td></tr>
         <tr><td class="mono">termguicolors</td><td class="mono">true</td><td>Enable 24-bit color (needed for themes)</td></tr>
         <tr><td class="mono">cursorline</td><td class="mono">true</td><td>Highlight the line the cursor is on</td></tr>
-        <tr><td class="mono">colorcolumn</td><td class="mono">"80"</td><td>Draw a guide bar at column 80</td></tr>
+        <tr><td class="mono">colorcolumn</td><td class="mono">off</td><td>The column-80 guide is commented out in <code>options.lua</code></td></tr>
         <tr><td class="mono">signcolumn</td><td class="mono">"yes"</td><td>Always show the left gutter (git/diagnostic signs) so text doesn't jump</td></tr>
         <tr><td class="mono">clipboard</td><td class="mono">unnamedplus</td><td>Yanks/deletes use the system clipboard</td></tr>
         <tr><td class="mono">scrolloff</td><td class="mono">5</td><td>Keep 5 lines visible above/below the cursor</td></tr>
@@ -328,7 +329,8 @@ const PLUGINS = [
       ["&lt;leader&gt;fb","Open buffers"],["&lt;leader&gt;fw","Grep word under cursor"],
       ["&lt;leader&gt;fd","Diagnostics"],["&lt;leader&gt;fr","Resume last search"],
       ["&lt;leader&gt;f.","Recent files"],["&lt;leader&gt;f/","Fuzzy find in current buffer"],
-      ["&lt;leader&gt;fh","Help tags"],["&lt;leader&gt;fn","Neovim config files"]
+      ["&lt;leader&gt;fh","Help tags"],["&lt;leader&gt;fn","Neovim config files"],
+      ["&lt;leader&gt;ft","Find TODO comments"]
     ],
     code:`vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
 vim.keymap.set("n", "<leader>fg", builtin.live_grep,  { desc = "Live grep" })
@@ -338,14 +340,13 @@ vim.keymap.set("n", "<leader>fg", builtin.live_grep,  { desc = "Live grep" })
     tagline:"Pin your 3–4 most-used files and jump between them instantly.",
     keywords:"marks bookmarks quick file switch jump",
     body:`<p>Harpoon fixes the "I keep switching between the same 4 files" problem. You <em>add</em> a file to a short list, then jump straight to slot 1/2/3/4 — no fuzzy searching, no scrolling. Think of it as manual, permanent bookmarks for the current project.</p>
-      <p>This is the same tool you use in VS Code; the keymaps here mirror it.</p>`,
+      <p>This is the same tool you use in VS Code; the keymaps here mirror it. <code>save_on_toggle</code> is on, so deleting a mark with <code>dd</code> in the menu is kept when you close it (the plugin default would discard that).</p>`,
     keymaps:[
       ["&lt;leader&gt;a","Add current file to Harpoon"],
       ["&lt;leader&gt;h","Open the Harpoon quick menu"],
       ["&lt;leader&gt;1 … 4","Jump to Harpoon file 1–4"]
     ],
-    code:`local harpoon = require("harpoon")
-harpoon:setup()
+    code:`harpoon:setup({ settings = { save_on_toggle = true } })
 vim.keymap.set("n", "<leader>a", function() harpoon:list():add() end)
 vim.keymap.set("n", "<leader>h", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)` },
 
@@ -380,7 +381,7 @@ vim.keymap.set("n", "S", api.node.open.horizontal, opts("Horizontal Split"))` },
   },
 })` },
 
-  { id:"lspconfig", name:"nvim-lspconfig", repo:"neovim/nvim-lspconfig", commit:"7ab79bb", cat:CAT.LSP,
+  { id:"lspconfig", name:"nvim-lspconfig", repo:"neovim/nvim-lspconfig", commit:"1c0d8f7", cat:CAT.LSP,
     tagline:"Wires up language servers — go-to-definition, hover, rename, diagnostics.",
     keywords:"lsp language server definition references hover rename diagnostics",
     body:`<p>This connects Neovim to language servers (TypeScript, Angular, Lua, etc.), giving you IDE features: jump to definition, find references, hover docs, rename, code actions, and inline errors.</p>
@@ -486,7 +487,7 @@ map("n", "<leader>hb", function() gs.blame_line({ full = true }) end, "Blame lin
 keymap.set("n", "[t", function() todo_comments.jump_prev() end)` },
 
   // ---------------- Editing ----------------
-  { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"61df849", cat:CAT.EDIT,
+  { id:"treesitter", name:"nvim-treesitter", repo:"nvim-treesitter/nvim-treesitter", commit:"7b6cc89", cat:CAT.EDIT,
     tagline:"Accurate syntax highlighting & code understanding.",
     keywords:"treesitter syntax highlighting parser",
     body:`<p>Treesitter parses your code into a real syntax tree, giving far more accurate highlighting than old regex methods — and powering features in other plugins (auto-tag, context-aware commenting). Your config installs parsers for lua, vim, js, ts, tsx, html, css, json, markdown and bash.</p>`,
@@ -571,17 +572,21 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
     tagline:"A terminal you can toggle open and shut without leaving Neovim.",
     keywords:"terminal shell toggle console command run",
     body:`<p>Opens a persistent terminal in a horizontal split at the bottom of the window. Press the toggle key again to hide it — the shell keeps running in the background, so builds and dev servers survive being tucked away.</p>
-      <p>The toggle is <code>&lt;C-\\&gt;</code> and works from insert mode too (<code>insert_mappings</code>). To get <em>out</em> of the terminal back to normal mode, use <code>&lt;C-\\&gt;&lt;C-n&gt;</code>.</p>`,
+      <p>The toggle is <code>&lt;C-\\&gt;</code> and works from insert mode too (<code>insert_mappings</code>). To get <em>out</em> of the terminal back to normal mode, use <code>&lt;C-\\&gt;&lt;C-n&gt;</code>.</p>
+      <p>Terminal insert mode would swallow window-move keys, so a <code>TermOpen</code> autocmd maps <code>Ctrl-h/j/k/l</code> and <code>Ctrl-Alt-h/j/k/l</code> to leave the terminal and move to that split — matching the global maps in <code>keymaps.lua</code> (needed when tmux forwards those chords).</p>`,
     keymaps:[
       ["&lt;C-\\&gt;","Toggle the terminal open / closed"],
       ["&lt;C-\\&gt;&lt;C-n&gt; <span class='mode-pill'>in term</span>","Leave terminal insert mode"],
+      ["&lt;C-h/j/k/l&gt; <span class='mode-pill'>in term</span>","Leave terminal and move to that split"],
+      ["&lt;C-M-h/j/k/l&gt; <span class='mode-pill'>in term</span>","Same, for tmux-forwarded chords"],
       ["&lt;count&gt;&lt;C-\\&gt;","Open terminal number &lt;count&gt;"]
     ],
     code:`require("toggleterm").setup({
   size = 15, open_mapping = [[<c-\\>]],
   direction = "horizontal", start_in_insert = true,
   insert_mappings = true, persist_size = true,
-})` },
+})
+-- TermOpen: <C-h/j/k/l> and <C-M-hjkl> -> <C-\\><C-n><C-w>{dir}` },
 
   { id:"maximizer", name:"vim-maximizer", repo:"szw/vim-maximizer", commit:"2e54952", cat:CAT.EDIT,
     tagline:"Toggle a split to full-screen and back.",
@@ -603,16 +608,20 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
   { id:"tmux-nav", name:"vim-tmux-navigator", repo:"christoomey/vim-tmux-navigator", commit:"e41c431", cat:CAT.EDIT,
     tagline:"Move between Neovim splits (and tmux panes) with Ctrl-h/j/k/l.",
     keywords:"tmux navigator split window navigate ctrl",
-    body:`<p>Lets <code>Ctrl-h/j/k/l</code> move seamlessly between Neovim splits — and if you run Neovim inside tmux, across tmux panes too, with the same keys.</p>`,
-    keymaps:[["&lt;C-h/j/k/l&gt;","Move to the split left/down/up/right"]],
-    code:`-- provided by the plugin; no extra config needed` },
+    body:`<p>Still installed. On this Mac, <code>Ctrl-h/j/k/l</code> (and <code>Ctrl-Alt-h/j/k/l</code> for chords tmux forwards) are also set explicitly in <code>core/keymaps.lua</code> to <code>&lt;C-w&gt;</code> moves, so they work even without relying on the plugin's maps. Inside Ghostty, tmux owns panes; this plugin is what would also hop across tmux panes when Neovim is focused.</p>`,
+    keymaps:[
+      ["&lt;C-h/j/k/l&gt;","Move to the split left/down/up/right"],
+      ["&lt;C-M-h/j/k/l&gt;","Same window move (tmux-forwarded)"]
+    ],
+    code:`-- plugin maps C-hjkl; keymaps.lua repeats them as <C-w> moves
+-- plus <C-M-hjkl> for tmux` },
 
   // ---------------- UI ----------------
   { id:"catppuccin", name:"catppuccin", repo:"catppuccin/nvim", commit:"79e2049", cat:CAT.UI,
     tagline:"The color theme (this docs site matches it).",
     keywords:"colorscheme theme catppuccin colors transparent",
     body:`<p>The soothing pastel colorscheme applied to the whole editor. Loaded with high priority so it's set before other UI. (These docs use the same Mocha/Latte palettes.)</p>
-      <p><code>transparent_background</code> is on, so the editor background is left unpainted and the terminal shows through — this is what pairs with WezTerm's <code>window_background_opacity</code> and blur.</p>
+      <p><code>transparent_background</code> is on, so the editor background is left unpainted and Ghostty (or another terminal) shows through.</p>
       <p><strong>Careful with the name:</strong> the plugin repo is <code>catppuccin/nvim</code>, but the colorschemes it registers are <code>catppuccin-mocha</code>, <code>-latte</code>, <code>-frappe</code> and <code>-macchiato</code>. There is no <code>catppuccin-nvim</code> scheme; using that name raises <code>E185</code> and aborts the rest of the config block.</p>`,
     keymaps:[["—","Set once at startup"]],
     code:`require("catppuccin").setup({
@@ -631,9 +640,9 @@ vim.cmd("colorscheme catppuccin-mocha")` },
   { id:"bufferline", name:"bufferline.nvim", repo:"akinsho/bufferline.nvim", commit:"655133c", cat:CAT.UI,
     tagline:"Tab bar across the top.",
     keywords:"bufferline tabs top bar buffers",
-    body:`<p>The row of tabs along the top. Configured in <code>"tabs"</code> mode with a "slant" separator style, so it shows Vim tab-pages with file icons.</p>`,
+    body:`<p>The row of tabs along the top. Configured in <code>"tabs"</code> mode. Separators are empty strings (no slant glyphs), so the bar stays a flat row of tab-pages with file icons.</p>`,
     keymaps:[["—","Click or use tab navigation"]],
-    code:`opts = { options = { mode = "tabs", separator_style = "slant" } }` },
+    code:`opts = { options = { mode = "tabs", separator_style = { "", "" } } }` },
 
   { id:"alpha", name:"alpha-nvim", repo:"goolord/alpha-nvim", commit:"6c6a89d", cat:CAT.UI,
     tagline:"The start dashboard with the NEOVIM logo and shortcuts.",
@@ -666,20 +675,13 @@ vim.cmd("colorscheme catppuccin-mocha")` },
     code:`return { "stevearc/dressing.nvim", event = "VeryLazy" }` },
 
   { id:"smear-cursor", name:"smear-cursor.nvim", repo:"sphamba/smear-cursor.nvim", commit:"9e9378d", cat:CAT.UI,
-    tagline:"Animated trail that follows the cursor as it jumps.",
-    keywords:"smear cursor animation trail motion smooth",
-    body:`<p>Draws a tapering streak between where the cursor was and where it landed, so big jumps stay easy to follow. The whole effect is painted with ordinary text characters — no graphics protocol — so it works in any terminal.</p>
-      <p><code>stiffness</code> and <code>trailing_stiffness</code> are dropped to <code>0.5</code> (defaults <code>0.6</code>/<code>0.45</code>). Equal and lower means the tail lags further behind and settles more slowly: a longer, lazier smear.</p>
-      <p><strong>Two settings exist because of this config specifically.</strong> The shading normally uses block characters from the Legacy Computing range (U+1FB00), which JetBrainsMono Nerd Font doesn't ship — so <code>legacy_computing_symbols_support</code> stays <code>false</code> to avoid rendering the trail as missing glyphs. With that off the plugin fakes shading by painting cells in the background colour, which it reads from <code>Normal</code> — and catppuccin leaves that unset under <code>transparent_background</code>. Without <code>transparent_bg_fallback_color</code> the trail smears black boxes across the transparent window, so it's pinned to mocha's base <code>#1e1e2e</code>.</p>`,
-    keymaps:[["—","No keymaps — it just runs"]],
-    code:`opts = {
-  smear_between_buffers = true,
-  smear_between_neighbor_lines = true,
-  scroll_buffer_space = true,
-  legacy_computing_symbols_support = false,  -- font lacks U+1FB00 blocks
-  transparent_bg_fallback_color = "#1e1e2e", -- catppuccin mocha base
-  stiffness = 0.5,
-  trailing_stiffness = 0.5,
+    tagline:"Cursor trail plugin — currently disabled.",
+    keywords:"smear cursor animation trail motion smooth disabled",
+    body:`<p><strong>Not loaded.</strong> <code>plugins/smear-cursor.lua</code> returns an empty spec; the old setup is commented out underneath. Ghostty shaders cover motion effects on this Mac, so the in-editor trail is off.</p>
+      <p>The commented block is what you'd uncomment to bring it back: stiffness 0.5, no Legacy Computing glyphs (font doesn't have U+1FB00), and <code>transparent_bg_fallback_color = "#1e1e2e"</code> so a transparent Catppuccin background doesn't smear black boxes. The plugin is still listed in <code>lazy-lock.json</code> from when it was installed.</p>`,
+    keymaps:[["—","Disabled — no trail"]],
+    code:`return {
+  -- spec commented out; plugin not loaded
 }` },
 
   { id:"devicons", name:"nvim-web-devicons", repo:"nvim-tree/nvim-web-devicons", commit:"2ae6958", cat:CAT.UI,
@@ -724,7 +726,15 @@ const KEYMAPS = [
   {k:"&lt;C-c&gt;", d:"Use Ctrl-C as Escape", g:"Core", m:"i"},
   {k:"&lt;leader&gt;s", d:"Search & replace word under cursor", g:"Core", m:"n"},
   {k:"&lt;leader&gt;cl / co / cn / cp", d:"Quickfix: close / open / next / prev", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;j / k", d:"Location list: previous / next", g:"Core", m:"n"},
   {k:"&lt;leader&gt;mm", d:"Run :make", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;cd", d:"Open netrw (:Ex)", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;cc", d:"php-cs-fixer on current file (PHP leftover)", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;x", d:"chmod +x current file", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;rl", d:"Reload init.lua", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;li", d:"checkhealth vim.lsp", g:"Core", m:"n"},
+  {k:"&lt;leader&gt;y", d:"OSCYank (plugin not installed — mapping is a no-op)", g:"Core", m:"n/v"},
+  {k:"&lt;leader&gt;u", d:"UndotreeToggle (plugin not installed — mapping is a no-op)", g:"Core", m:"n"},
   // LSP
   {k:"gd", d:"Go to definition", g:"LSP", m:"n"},
   {k:"gD", d:"Go to declaration", g:"LSP", m:"n"},
@@ -749,6 +759,7 @@ const KEYMAPS = [
   {k:"&lt;leader&gt;f/", d:"Fuzzy find in current buffer", g:"Telescope", m:"n"},
   {k:"&lt;leader&gt;fh", d:"Help tags", g:"Telescope", m:"n"},
   {k:"&lt;leader&gt;fn", d:"Neovim config files", g:"Telescope", m:"n"},
+  {k:"&lt;leader&gt;ft", d:"Find TODO comments", g:"Telescope", m:"n"},
   // file tree
   {k:"&lt;leader&gt;ee", d:"Toggle file explorer", g:"File Tree", m:"n"},
   {k:"&lt;leader&gt;ef", d:"Explorer on current file", g:"File Tree", m:"n"},
@@ -783,7 +794,8 @@ const KEYMAPS = [
   {k:"&lt;C-t&gt; / &lt;C-d&gt;", d:"Indent / dedent (tabout fallback when there's nothing to jump)", g:"Editing", m:"i"},
   {k:"&lt;C-\\&gt;", d:"Toggle the terminal split open / closed", g:"Terminal", m:"n/i"},
   {k:"&lt;C-\\&gt;&lt;C-n&gt;", d:"Leave terminal insert mode", g:"Terminal", m:"t"},
-  {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits", g:"Windows", m:"n"},
+  {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits (also from toggleterm)", g:"Windows", m:"n/t"},
+  {k:"&lt;C-M-h/j/k/l&gt;", d:"Same window move (tmux-forwarded chords)", g:"Windows", m:"n/t"},
   // sessions
   {k:"&lt;leader&gt;wr / ws", d:"Restore / save session", g:"Session", m:"n"},
   // completion (insert)
