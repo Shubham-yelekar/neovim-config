@@ -78,6 +78,47 @@ if is_windows then
   config.win32_system_backdrop = "Acrylic"
 end
 
+-- Background image. Drop any jpg/jpeg/png into win/wezterm/bg/ (gitignored)
+-- and it is picked up on the next config reload; the first one by name wins.
+-- With an image the window goes opaque - layering acrylic under a picture just
+-- makes both muddy - and the image is dimmed twice: brightness pulled down on
+-- the image itself, then a near-black wash on top so text stays readable.
+-- Nothing in bg/ means the acrylic setup above stays as-is.
+local bg_dir = wezterm.config_dir .. "/bg"
+local bg_images = {}
+for _, pattern in ipairs({ "*.jpg", "*.jpeg", "*.png" }) do
+  for _, path in ipairs(wezterm.glob(bg_dir .. "/" .. pattern)) do
+    table.insert(bg_images, path)
+  end
+end
+table.sort(bg_images)
+
+if #bg_images > 0 then
+  config.window_background_opacity = 1.0
+  config.win32_system_backdrop = "Auto"
+  config.background = {
+    {
+      source = { File = bg_images[1] },
+      -- Cover: scale to fill, crop the overflow, never tile.
+      horizontal_align = "Center",
+      vertical_align = "Middle",
+      width = "Cover",
+      height = "Cover",
+      repeat_x = "NoRepeat",
+      repeat_y = "NoRepeat",
+      hsb = { brightness = 0.15 },
+    },
+    {
+      -- Catppuccin Mocha base, mostly opaque. Raise opacity for a darker
+      -- terminal, lower it to let more of the picture through.
+      source = { Color = "#1e1e2e" },
+      width = "100%",
+      height = "100%",
+      opacity = 0.75,
+    },
+  }
+end
+
 -- Start maximized rather than fullscreen. This matters for the backdrop above:
 -- acrylic and mica blur whatever sits behind the window, and a fullscreen window
 -- has nothing behind it, so DWM stops drawing the effect and you get flat grey.

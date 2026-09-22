@@ -3,13 +3,15 @@
 Two machines, two stacks. They used to share WezTerm + Neovim. They don't anymore:
 
 - **Mac (personal):** Ghostty (shaders) + tmux + zsh + Neovim — this is the setup I'm learning on.
-- **Windows (work):** WezTerm + PowerShell. Editor there is VS Code, not this Neovim config.
+- **Windows (work):** WezTerm + PowerShell + Neovim. Day-to-day editor is VS Code; nvim is for terminal work.
 
 ```
 mac/   nvim, ghostty, tmux, zsh, fastfetch
-win/   wezterm, powershell, fastfetch
+win/   nvim, wezterm, powershell, fastfetch
 docs/  Neovim keymap/plugin reference (Mac nvim)
 ```
+
+The two `nvim/` trees are deliberate copies, not a shared config. Same keymaps and plugins; `win/nvim` drops the tmux bits (vim-tmux-navigator, the Ctrl+Alt+hjkl chords) and points toggleterm at PowerShell. Change one, port to the other by hand.
 
 ## Mac
 
@@ -55,27 +57,33 @@ Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in 
 
 ## Windows
 
-Work machine: VS Code for editing. This folder is the old WezTerm + PowerShell environment.
+Work machine: VS Code for editing, nvim + WezTerm + PowerShell for terminal work.
 
-| Folder | Configures | Symlink to |
+| Folder | Configures | Link to |
 |---|---|---|
+| [`win/nvim/`](win/nvim/) | Neovim | `%LOCALAPPDATA%\nvim\` (**not** `~\.config\nvim` — nvim ignores that on Windows) |
 | [`win/wezterm/`](win/wezterm/) | WezTerm | `~\.config\wezterm\` |
 | [`win/powershell/`](win/powershell/) | PowerShell profile | `~\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` |
 | [`win/fastfetch/`](win/fastfetch/) | fastfetch | `~\.config\fastfetch\` |
 
 ```powershell
-winget install wez.wezterm Fastfetch-cli.Fastfetch `
+winget install Neovim.Neovim wez.wezterm Fastfetch-cli.Fastfetch `
                eza-community.eza ajeetdsouza.zoxide junegunn.fzf `
-               sharkdp.fd JanDeDobbeleer.OhMyPosh
+               sharkdp.fd BurntSushi.ripgrep.MSVC JesseDuffield.lazygit `
+               JanDeDobbeleer.OhMyPosh
 
 git clone https://github.com/Shubham-yelekar/neovim-config.git E:\dotfiles
 cd E:\dotfiles
-# elevated shell, or Developer Mode
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\wezterm"  -Target "$PWD\win\wezterm"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\fastfetch" -Target "$PWD\win\fastfetch"
-New-Item -ItemType SymbolicLink `
-  -Path   "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" `
-  -Target "$PWD\win\powershell\Microsoft.PowerShell_profile.ps1"
+# Directory junctions need no elevation. Back up anything already at these paths first.
+New-Item -ItemType Junction -Path "$env:LOCALAPPDATA\nvim"            -Target "$PWD\win\nvim"
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\wezterm"  -Target "$PWD\win\wezterm"
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\fastfetch" -Target "$PWD\win\fastfetch"
+
+# The profile is a file, and file symlinks need an elevated shell or Developer Mode.
+# A stub that dot-sources the repo copy works everywhere and behaves the same:
+New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\WindowsPowerShell" | Out-Null
+". `"$PWD\win\powershell\Microsoft.PowerShell_profile.ps1`"" |
+  Set-Content "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" -Encoding utf8
 ```
 
 WezTerm loads the bundled JetBrainsMono Nerd Font from `win/wezterm/font/` and starts PowerShell so the profile (oh-my-posh, zoxide, eza, fzf pickers) actually runs.
@@ -86,5 +94,5 @@ WezTerm loads the bundled JetBrainsMono Nerd Font from `win/wezterm/font/` and s
 - **Do not share a shell config.** `mac/zsh/` is zsh; `win/powershell/` is a separate PowerShell port.
 - **Blur is Windows-only in `win/wezterm`.** `win32_system_backdrop = "Acrylic"` needs `window_background_opacity` low enough for the backdrop to show. `macos_window_background_blur` in that file is leftover and unused on Windows.
 - **fastfetch's chafa logo** is flaky on the winget build; same config draws the image on macOS.
-- `mac/nvim/lazy-lock.json` pins Neovim plugins. Commit it after `:Lazy update`.
+- `mac/nvim/lazy-lock.json` and `win/nvim/lazy-lock.json` pin Neovim plugins per machine. Commit after `:Lazy update`.
 - tmux plugins live in `~/.config/tmux/plugins/` and are gitignored. Reinstall with TPM on a new Mac.

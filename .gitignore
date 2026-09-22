@@ -16,5 +16,6 @@ mac/zsh/.zhistory
 # TPM installs plugins here. Clone tpm on a fresh machine; do not commit it.
 mac/tmux/plugins/
 
-# Background images - 38MB of JPEGs that wezterm.lua never references.
+# Background images. wezterm.lua picks up whatever is in here; the pictures
+# themselves are personal and large, so they stay out of the repo.
 win/wezterm/bg/
