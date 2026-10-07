@@ -444,18 +444,20 @@ vim.keymap.set("n", "<leader>h", function() harpoon.ui:toggle_quick_menu(harpoon
     tagline:"A file explorer sidebar with git status and split-open.",
     keywords:"file explorer tree sidebar files",
     body:`<p>The left-hand file tree. It shows git status per file (the <code>✗</code> = unstaged, <code>★</code> = untracked marks), and lets you create/rename/delete files without leaving Neovim.</p>
-      <p>Custom split keys were added so files open the way they do in your VS Code explorer.</p>`,
+      <p>Split keys match Telescope (<code>Ctrl+v</code> / <code>Ctrl+x</code>). With two or more splits open, <code>Enter</code> shows a letter on each split so you pick where the file opens.</p>`,
     keymaps:[
       ["&lt;leader&gt;ee","Toggle the file explorer"],
       ["&lt;leader&gt;ef","Toggle, focused on the current file"],
       ["&lt;leader&gt;ec","Collapse the tree"],["&lt;leader&gt;er","Refresh the tree"],
-      ["s <span class='mode-pill'>in tree</span>","Open file in a vertical split (custom)"],
-      ["S <span class='mode-pill'>in tree</span>","Open file in a horizontal split (custom)"],
-      ["&lt;CR&gt; / o","Open file · a: new file · r: rename · d: delete"]
+      ["&lt;C-v&gt; <span class='mode-pill'>in tree</span>","Open file in a vertical split (same as Telescope)"],
+      ["&lt;C-x&gt; <span class='mode-pill'>in tree</span>","Open file in a horizontal split (same as Telescope)"],
+      ["&lt;CR&gt; / o","Open file (pick split by letter) · a: new file · r: rename · d: delete"]
     ],
-    code:`-- override built-in s (system open) & S (search) with splits:
-vim.keymap.set("n", "s", api.node.open.vertical,   opts("Vertical Split"))
-vim.keymap.set("n", "S", api.node.open.horizontal, opts("Horizontal Split"))` },
+    code:`actions = {
+  open_file = {
+    window_picker = { enable = true }, -- letter per split on <CR>
+  },
+},` },
 
   // ---------------- LSP & Completion ----------------
   { id:"mason", name:"mason.nvim", repo:"williamboman/mason.nvim", commit:"2a6940a", cat:CAT.LSP,
@@ -767,7 +769,7 @@ vim.cmd("colorscheme catppuccin-mocha")` },
   { id:"smear-cursor", name:"smear-cursor.nvim", repo:"sphamba/smear-cursor.nvim", commit:"9e9378d", cat:CAT.UI,
     tagline:"Cursor trail plugin — currently disabled.",
     keywords:"smear cursor animation trail motion smooth disabled",
-    body:`<p><strong>Not loaded.</strong> <code>plugins/smear-cursor.lua</code> returns an empty spec; the old setup is commented out underneath. Ghostty shaders cover motion effects on this Mac, so the in-editor trail is off.</p>
+    body:`<p><strong>Not loaded.</strong> <code>plugins/smear-cursor.lua</code> returns an empty spec; the old setup is commented out underneath. Ghostty shaders cover motion effects on this Mac, so the in-editor trail is off. <strong>On Windows it is loaded</strong> (<code>win/nvim/…/smear-cursor.lua</code>), since WezTerm has no cursor shader.</p>
       <p>The commented block is what you'd uncomment to bring it back: stiffness 0.5, no Legacy Computing glyphs (font doesn't have U+1FB00), and <code>transparent_bg_fallback_color = "#1e1e2e"</code> so a transparent Catppuccin background doesn't smear black boxes. The plugin is still listed in <code>lazy-lock.json</code> from when it was installed.</p>`,
     keymaps:[["—","Disabled — no trail"]],
     code:`return {

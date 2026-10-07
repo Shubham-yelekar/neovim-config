@@ -74,7 +74,7 @@ if is_windows then
   -- Acrylic, not Mica: Mica samples the wallpaper once and stays near-opaque,
   -- which is why it read as flat grey. Acrylic is the live blur Windows
   -- Terminal uses, so the desktop actually shows through.
-  config.window_background_opacity = 0.5
+  config.window_background_opacity = 1.0
   config.win32_system_backdrop = "Acrylic"
 end
 

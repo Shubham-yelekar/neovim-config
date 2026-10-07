@@ -17,7 +17,9 @@ vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]]) -- Delete without yanking
 
 vim.keymap.set("i", "<C-c>", "<Esc>") -- Use Ctrl+C as Escape
 
--- Window navigation (also works from toggleterm via TermOpen maps).
+-- Window navigation. Not mapped in terminal mode: floaterm is a floating
+-- window, so there is no neighbour to move to, and it binds Ctrl+hjk itself
+-- (sidebar, and cycling between terminals).
 -- No tmux on Windows, so only the plain Ctrl+hjkl chords - the Ctrl+Alt+hjkl
 -- set in mac/nvim exists for tmux forwarding and has nothing to forward here.
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Window left" })

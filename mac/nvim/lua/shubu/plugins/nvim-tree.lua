@@ -8,24 +8,9 @@ return {
     vim.g.loaded_netrw = 1
     vim.g.loaded_netrwPlugin = 1
 
-    -- custom keymaps inside the tree (override built-in s = system_open, S = search)
-    local function on_attach(bufnr)
-      local api = require("nvim-tree.api")
-
-      local function opts(desc)
-        return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
-      end
-
-      -- keep all the default mappings first
-      api.config.mappings.default_on_attach(bufnr)
-
-      -- VS Code-style splits: s = vertical (side), S = horizontal (below)
-      vim.keymap.set("n", "s", api.node.open.vertical, opts("Open: Vertical Split"))
-      vim.keymap.set("n", "S", api.node.open.horizontal, opts("Open: Horizontal Split"))
-    end
-
+    -- splits use nvim-tree's default keys, same as Telescope:
+    -- <C-v> = vertical, <C-x> = horizontal, <C-t> = new tab
     nvimtree.setup({
-      on_attach = on_attach,
       view = {
         width = 35,
         relativenumber = true,
@@ -44,13 +29,11 @@ return {
           },
         },
       },
-      -- disable window_picker for
-      -- explorer to work well with
-      -- window splits
+      -- with 2+ splits, <CR> shows a letter on each split; press it to choose where the file opens
       actions = {
         open_file = {
           window_picker = {
-            enable = false,
+            enable = true,
           },
         },
       },

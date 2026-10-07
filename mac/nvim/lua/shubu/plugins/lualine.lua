@@ -49,12 +49,46 @@ return {
       },
     }
 
+    -- Short mode labels, so the mode block stays one or two characters wide instead of
+    -- eating the left end of the statusline. The keys are lualine's own mode names (see
+    -- lualine/utils/mode.lua) -- the visual/select/replace families keep a second letter
+    -- so you can still tell charwise from linewise from blockwise at a glance.
+    local mode_label = {
+      ["NORMAL"] = "N",
+      ["O-PENDING"] = "O",
+      ["VISUAL"] = "V",
+      ["V-LINE"] = "VL",
+      ["V-BLOCK"] = "VB",
+      ["SELECT"] = "S",
+      ["S-LINE"] = "SL",
+      ["S-BLOCK"] = "SB",
+      ["INSERT"] = "I",
+      ["REPLACE"] = "R",
+      ["V-REPLACE"] = "VR",
+      ["COMMAND"] = "C",
+      ["EX"] = "EX",
+      ["MORE"] = "M",
+      ["CONFIRM"] = "?",
+      ["SHELL"] = "!",
+      ["TERMINAL"] = "TERM",
+    }
+
     -- configure lualine with modified theme
     lualine.setup({
       options = {
         theme = my_lualine_theme,
       },
       sections = {
+        lualine_a = {
+          {
+            "mode",
+            -- Fall back to the full name for anything unmapped, so a mode lualine doesn't
+            -- recognise shows its raw code rather than vanishing.
+            fmt = function(str)
+              return mode_label[str] or str
+            end,
+          },
+        },
         lualine_x = {
           {
             lazy_status.updates,
