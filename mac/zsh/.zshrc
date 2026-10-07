@@ -137,3 +137,19 @@ alias ls="eza --icons=always"
 eval "$(zoxide init zsh)"
 
 alias cd="z"
+
+# ---- Claude Code ----
+# Personal API key, so it lives in the macOS Keychain and never in this file -
+# this repo is public. Store it once (interactively, to keep it out of history):
+#   security add-generic-password -a "$USER" -s anthropic-api-key -w
+# The wrapper scopes the key to the claude process rather than exporting it into
+# every shell. With no Keychain entry it falls through to whatever auth claude
+# already has, so a fresh machine still works before the key is set up.
+claude() {
+  local key
+  if key=$(security find-generic-password -a "$USER" -s anthropic-api-key -w 2>/dev/null); then
+    ANTHROPIC_API_KEY="$key" command claude "$@"
+  else
+    command claude "$@"
+  fi
+}

@@ -19,3 +19,8 @@ mac/tmux/plugins/
 # Background images. wezterm.lua picks up whatever is in here; the pictures
 # themselves are personal and large, so they stay out of the repo.
 win/wezterm/bg/
+
+# Claude Code per-machine settings: granted permissions and credential helpers.
+# Work and personal machines need different ones, and this repo is public, so
+# these never get committed. Shared settings go in settings.json instead.
+**/.claude/settings.local.json
