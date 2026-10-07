@@ -44,7 +44,9 @@ return {
   -- Same chord toggleterm used, in normal and terminal mode, so the muscle
   -- memory carries over. Mapping terminal mode shadows the built-in
   -- <C-\><C-n> escape -- toggleterm did that too (terminal_mappings
-  -- defaults on), so this is not a regression.
+  -- defaults on), so this is not a regression. <Esc><Esc>, set up in
+  -- mappings.term below, is the replacement; without it there is no way out
+  -- of terminal mode and so no way to yank anything out of the terminal.
   keys = {
     {
       [[<C-\>]],
@@ -74,6 +76,54 @@ return {
     -- Percentages of the editor, not lines/columns. Bigger than the 60x70
     -- default because this is where test output and dev servers live.
     size = { h = 80, w = 85 },
+    -- Called once per terminal buffer, from utils.switch_buf -- and crucially
+    -- right AFTER volt has installed its own buffer-local maps on that same
+    -- buffer. Same buffer, same lhs, later call wins, which is the only
+    -- reason the <Esc>/q overrides below take effect at all.
+    mappings = {
+      term = function(buf)
+        local map = function(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = buf, desc = desc })
+        end
+
+        -- Paste. Nothing in the stack does this for you: Ctrl-V is readline's
+        -- quoted-insert so bash swallows it, and Ctrl-Shift-V never reaches
+        -- the job. nvim_paste is the built-in path -- the same one a paste
+        -- from the host terminal travels down -- and in terminal mode it
+        -- forwards to the job, multi-line and bracketed paste included.
+        -- Plain "+p can never work here: the buffer is the job's scrollback
+        -- and is not modifiable.
+        --
+        -- Terminal mode only, deliberately. vim.paste routes both t and nt
+        -- (normal mode in a terminal buffer) into nvim_put, but in nt there
+        -- is no insertion path to the job and the buffer refuses the edit, so
+        -- an n-mode binding would be a dead key. autoinsert is on, so the
+        -- prompt is always reached in terminal mode anyway.
+        local function paste()
+          vim.api.nvim_paste(vim.fn.getreg("+"), true, -1)
+        end
+
+        map("t", "<C-v>", paste, "Paste from clipboard")
+        map("t", "<C-S-v>", paste, "Paste from clipboard")
+
+        -- Copying means leaving terminal mode first, selecting, then y -- and
+        -- the built-in <C-\><C-n> cannot do the leaving. <C-\> is a COMPLETE
+        -- t-mode mapping (the toggle above), so nvim resolves it the instant
+        -- it is pressed and <C-n> never gets a look-in. Esc-Esc replaces it.
+        -- A lone Esc still reaches the shell, just after timeoutlen; the Alt
+        -- chords (Esc-f, Esc-b, Esc-.) are unaffected, because the follow-up
+        -- key fails the mapping and nvim sends both through untouched.
+        map("t", "<Esc><Esc>", [[<C-\><C-n>]], "Leave terminal mode")
+
+        -- ...and once in normal mode, make it survivable. volt.mappings binds
+        -- BOTH of these buffer-locally to tear the whole float down, which is
+        -- why every select-and-yank attempt ended with the terminal gone
+        -- instead of a full register. <C-\> already closes it, so nothing is
+        -- lost: Esc returns to the prompt and q records macros again.
+        map("n", "<Esc>", vim.cmd.startinsert, "Back to terminal mode")
+        map("n", "q", "q", "Record macro")
+      end,
+    },
     -- The sidebar switches between these: <C-h> from the terminal opens it,
     -- number keys jump straight to one, `a` adds another, `e` renames.
     -- <C-j>/<C-k> cycle without opening the sidebar at all.
