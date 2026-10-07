@@ -33,6 +33,12 @@ set.backup = false -- Disable backup files
 set.undodir = vim.fn.stdpath("data") .. "/undodir" -- Undo file location (cross-platform)
 set.undofile = true -- Enable persistent undo
 
+-- Neovim's default sessionoptions omits localoptions, so a restored session comes
+-- back without per-buffer local options -- filetype and syntax highlighting are the
+-- visible casualties. auto-session warns about this in :checkhealth auto-session;
+-- this is the value it recommends (the default plus winpos and localoptions).
+set.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
 -- Git Bash as the shell. floaterm spawns `vim.o.shell` directly and offers no
 -- per-terminal shell option (toggleterm did), and project commands -- npm test,
 -- dev servers -- are written for a POSIX shell.
