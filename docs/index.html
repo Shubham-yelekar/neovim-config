@@ -205,7 +205,7 @@ const GUIDES = [
     id: "overview", title: "Overview", nav: "Overview",
     html: `
       <p class="lead">This is a living reference for my personal Neovim setup. I use Neovim to get comfortable with the command line, git, and Vim motions — this site explains <strong>what every piece does</strong> so I can actually understand my config instead of copy-pasting it.</p>
-      <p>This is a handwritten reference for the Neovim files in <code>mac/nvim/</code> (the Mac personal setup: Ghostty + tmux). Windows at work uses VS Code, not this config. Refresh this page when the Mac nvim files change.</p>
+      <p>This is a handwritten reference for the Neovim files in <code>mac/nvim/</code> (the Mac personal setup: Ghostty + tmux). <code>win/nvim/</code> is a hand-maintained copy for the work machine; where it differs, the plugin card says so. Refresh this page when either nvim tree changes.</p>
       <h3>The stack it's built for</h3>
       <ul>
         <li><strong>Frontend:</strong> React, Next.js, Tailwind, Angular (14+)</li>
@@ -660,25 +660,31 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
   tabouts = { { open = "(", close = ")" }, { open = "'", close = "'" } },
 }` },
 
-  { id:"toggleterm", name:"toggleterm.nvim", repo:"akinsho/toggleterm.nvim", commit:"50ea089", cat:CAT.EDIT,
-    tagline:"A terminal you can toggle open and shut without leaving Neovim.",
-    keywords:"terminal shell toggle console command run",
-    body:`<p>Opens a persistent terminal in a horizontal split at the bottom of the window. Press the toggle key again to hide it — the shell keeps running in the background, so builds and dev servers survive being tucked away.</p>
-      <p>The toggle is <code>&lt;C-\\&gt;</code> and works from insert mode too (<code>insert_mappings</code>). To get <em>out</em> of the terminal back to normal mode, use <code>&lt;C-\\&gt;&lt;C-n&gt;</code>.</p>
-      <p>Terminal insert mode would swallow window-move keys, so a <code>TermOpen</code> autocmd maps <code>Ctrl-h/j/k/l</code> and <code>Ctrl-Alt-h/j/k/l</code> to leave the terminal and move to that split — matching the global maps in <code>keymaps.lua</code> (needed when tmux forwards those chords).</p>`,
+  { id:"floaterm", name:"floaterm", repo:"nvzone/floaterm", commit:"fc2efaf", cat:CAT.EDIT,
+    tagline:"A floating terminal with a sidebar of named terminals. Replaces toggleterm.",
+    keywords:"terminal shell toggle console command run floaterm float volt toggleterm",
+    body:`<p>A centred floating panel (85% wide, 80% tall) with a sidebar listing several terminals: <strong>Terminal</strong>, <strong>Server</strong> and <strong>Tests</strong> by default. Hiding it keeps every shell running, so dev servers and test watchers keep going after you close the panel. It needs <code>nvzone/volt</code> for its UI.</p>
+      <p><strong>Colours:</strong> floaterm takes its panel colours from <code>Normal</code>'s background. With catppuccin's <code>transparent_background</code> that background is empty, so every panel would come out pure black. <code>floaterm.lua</code> sets the groups by hand from the mocha palette instead (crust for the sidebar, mantle for the terminal) and reapplies them on <code>ColorScheme</code>.</p>
+      <p><strong>Getting out of terminal mode:</strong> <code>&lt;C-\\&gt;</code> is the toggle, so the built-in <code>&lt;C-\\&gt;&lt;C-n&gt;</code> escape can't work. Use <code>&lt;Esc&gt;&lt;Esc&gt;</code> instead, then select and <code>y</code> to copy. In normal mode, <code>&lt;Esc&gt;</code> goes back to the prompt and <code>q</code> records macros again. By default volt makes both of those close the whole panel.</p>
+      <p><strong>Mac:</strong> vim-tmux-navigator's default maps are off, because its normal-mode <code>&lt;C-\\&gt;</code> overrode this toggle. See that card. <strong>Windows:</strong> floaterm runs <code>vim.o.shell</code> and has no per-terminal shell option, so <code>win/nvim/…/options.lua</code> sets the shell to Git Bash (the 8.3 path <code>C:/PROGRA~1/Git/bin/bash.exe</code>, so no quoting is needed). <code>dressing.lua</code> raises the input prompt's zindex on both machines so the sidebar's rename/add box isn't hidden behind the panel.</p>`,
     keymaps:[
-      ["&lt;C-\\&gt;","Toggle the terminal open / closed"],
-      ["&lt;C-\\&gt;&lt;C-n&gt; <span class='mode-pill'>in term</span>","Leave terminal insert mode"],
-      ["&lt;C-h/j/k/l&gt; <span class='mode-pill'>in term</span>","Leave terminal and move to that split"],
-      ["&lt;C-M-h/j/k/l&gt; <span class='mode-pill'>in term</span>","Same, for tmux-forwarded chords"],
-      ["&lt;count&gt;&lt;C-\\&gt;","Open terminal number &lt;count&gt;"]
+      ["&lt;C-\\&gt;","Toggle the floating terminal (normal and terminal mode)"],
+      ["&lt;Esc&gt;&lt;Esc&gt; <span class='mode-pill'>in term</span>","Leave terminal mode (to select and yank)"],
+      ["&lt;Esc&gt; <span class='mode-pill'>term normal</span>","Back to terminal mode"],
+      ["&lt;C-v&gt; / &lt;C-S-v&gt; <span class='mode-pill'>in term</span>","Paste the system clipboard into the shell"],
+      ["&lt;C-h&gt; <span class='mode-pill'>in term</span>","Open the terminal sidebar"],
+      ["&lt;C-j&gt; / &lt;C-k&gt; <span class='mode-pill'>in term</span>","Next / previous terminal"],
+      ["1-9 · a · e <span class='mode-pill'>sidebar</span>","Jump to terminal N · add a terminal · rename"]
     ],
-    code:`require("toggleterm").setup({
-  size = 15, open_mapping = [[<c-\\>]],
-  direction = "horizontal", start_in_insert = true,
-  insert_mappings = true, persist_size = true,
-})
--- TermOpen: <C-h/j/k/l> and <C-M-hjkl> -> <C-\\><C-n><C-w>{dir}` },
+    code:`{
+  "nvzone/floaterm", dependencies = "nvzone/volt", cmd = "FloatermToggle",
+  keys = { { [[<C-\\>]], "<cmd>FloatermToggle<cr>", mode = { "n", "t" } } },
+  opts = {
+    border = false, size = { h = 80, w = 85 },
+    terminals = { { name = "Terminal" }, { name = "Server" }, { name = "Tests" } },
+    -- mappings.term: <C-v> paste, <Esc><Esc> leave, n-mode <Esc>/q overrides
+  },
+}` },
 
   { id:"maximizer", name:"vim-maximizer", repo:"szw/vim-maximizer", commit:"2e54952", cat:CAT.EDIT,
     tagline:"Toggle a split to full-screen and back.",
@@ -698,15 +704,24 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
     code:`auto_session.setup({ auto_restore_enabled = false })` },
 
   { id:"tmux-nav", name:"vim-tmux-navigator", repo:"christoomey/vim-tmux-navigator", commit:"e41c431", cat:CAT.EDIT,
-    tagline:"Move between Neovim splits (and tmux panes) with Ctrl-h/j/k/l.",
-    keywords:"tmux navigator split window navigate ctrl",
-    body:`<p>Still installed. On this Mac, <code>Ctrl-h/j/k/l</code> (and <code>Ctrl-Alt-h/j/k/l</code> for chords tmux forwards) are also set explicitly in <code>core/keymaps.lua</code> to <code>&lt;C-w&gt;</code> moves, so they work even without relying on the plugin's maps. Inside Ghostty, tmux owns panes; this plugin is what would also hop across tmux panes when Neovim is focused.</p>`,
+    tagline:"Move between Neovim splits and tmux panes with Ctrl-h/j/k/l. Mac only.",
+    keywords:"tmux navigator split window navigate ctrl previous",
+    body:`<p>Mac only, since Windows has no tmux. <code>Ctrl-h/j/k/l</code> moves to the next split, or to the next tmux pane once you're at the edge of Neovim.</p>
+      <p><strong>Default maps are off</strong> (<code>g:tmux_navigator_no_mappings = 1</code>). The defaults include normal-mode <code>&lt;C-\\&gt;</code> for "previous pane". It loaded after floaterm and took over its toggle. Inside tmux it also mapped <code>Ctrl-h/j/k/l</code> in terminal mode, which floaterm uses for its sidebar. Now <code>plugins/init.lua</code> maps the four directions in normal mode only, and "previous" moves to <code>&lt;leader&gt;\\</code>.</p>
+      <p><code>Ctrl-Alt-h/j/k/l</code> (chords tmux forwards) are plain <code>&lt;C-w&gt;</code> moves in <code>core/keymaps.lua</code>. On Windows, <code>&lt;leader&gt;\\</code> is plain <code>&lt;C-w&gt;p</code>, so the key is the same on both machines.</p>`,
     keymaps:[
-      ["&lt;C-h/j/k/l&gt;","Move to the split left/down/up/right"],
-      ["&lt;C-M-h/j/k/l&gt;","Same window move (tmux-forwarded)"]
+      ["&lt;C-h/j/k/l&gt;","Move to the split / tmux pane left/down/up/right"],
+      ["&lt;leader&gt;\\","Jump to the previous split / tmux pane"],
+      ["&lt;C-M-h/j/k/l&gt;","Window move (tmux-forwarded chords)"]
     ],
-    code:`-- plugin maps C-hjkl; keymaps.lua repeats them as <C-w> moves
--- plus <C-M-hjkl> for tmux` },
+    code:`{
+  "christoomey/vim-tmux-navigator",
+  init = function() vim.g.tmux_navigator_no_mappings = 1 end,
+  keys = {
+    { "<C-h>", "<cmd>TmuxNavigateLeft<cr>" },  -- also j / k / l
+    { "<leader>\\\\", "<cmd>TmuxNavigatePrevious<cr>" },
+  },
+}` },
 
   // ---------------- UI ----------------
   { id:"catppuccin", name:"catppuccin", repo:"catppuccin/nvim", commit:"79e2049", cat:CAT.UI,
@@ -762,15 +777,20 @@ vim.cmd("colorscheme catppuccin-mocha")` },
   { id:"dressing", name:"dressing.nvim", repo:"stevearc/dressing.nvim", commit:"2d7c2db", cat:CAT.UI,
     tagline:"Prettier input & select popups.",
     keywords:"dressing ui input select prompt",
-    body:`<p>Upgrades Neovim's plain input prompts and selection menus (like the rename box or code-action list) into nicer floating windows.</p>`,
+    body:`<p>Upgrades Neovim's plain input prompts and selection menus (like the rename box or code-action list) into nicer floating windows.</p>
+      <p>The input window gets <code>zindex = 200</code>. dressing leaves it at Neovim's default of 50, which is behind floaterm's windows (100), so the sidebar's rename/add prompt opened out of sight.</p>`,
     keymaps:[["—","Automatic UI upgrade"]],
-    code:`return { "stevearc/dressing.nvim", event = "VeryLazy" }` },
+    code:`opts = {
+  input = {
+    override = function(conf) conf.zindex = 200; return conf end,
+  },
+}` },
 
   { id:"smear-cursor", name:"smear-cursor.nvim", repo:"sphamba/smear-cursor.nvim", commit:"9e9378d", cat:CAT.UI,
     tagline:"Cursor trail plugin — currently disabled.",
     keywords:"smear cursor animation trail motion smooth disabled",
     body:`<p><strong>Not loaded.</strong> <code>plugins/smear-cursor.lua</code> returns an empty spec; the old setup is commented out underneath. Ghostty shaders cover motion effects on this Mac, so the in-editor trail is off. <strong>On Windows it is loaded</strong> (<code>win/nvim/…/smear-cursor.lua</code>), since WezTerm has no cursor shader.</p>
-      <p>The commented block is what you'd uncomment to bring it back: stiffness 0.5, no Legacy Computing glyphs (font doesn't have U+1FB00), and <code>transparent_bg_fallback_color = "#1e1e2e"</code> so a transparent Catppuccin background doesn't smear black boxes. The plugin is still listed in <code>lazy-lock.json</code> from when it was installed.</p>`,
+      <p>The commented block is what you'd uncomment to bring it back: stiffness 0.5, no Legacy Computing glyphs (font doesn't have U+1FB00), and <code>transparent_bg_fallback_color = "#1e1e2e"</code> so a transparent Catppuccin background doesn't smear black boxes. It has been dropped from <code>mac/nvim/lazy-lock.json</code>; lazy.nvim adds it back if you re-enable it.</p>`,
     keymaps:[["—","Disabled — no trail"]],
     code:`return {
   -- spec commented out; plugin not loaded
@@ -884,10 +904,13 @@ const KEYMAPS = [
   {k:"&lt;leader&gt;sm", d:"Maximize / restore split", g:"Editing", m:"n"},
   {k:"&lt;Tab&gt; / &lt;S-Tab&gt;", d:"Tab out past a closing bracket or quote", g:"Editing", m:"i"},
   {k:"&lt;C-t&gt; / &lt;C-d&gt;", d:"Indent / dedent (tabout fallback when there's nothing to jump)", g:"Editing", m:"i"},
-  {k:"&lt;C-\\&gt;", d:"Toggle the terminal split open / closed", g:"Terminal", m:"n/i"},
-  {k:"&lt;C-\\&gt;&lt;C-n&gt;", d:"Leave terminal insert mode", g:"Terminal", m:"t"},
-  {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits (also from toggleterm)", g:"Windows", m:"n/t"},
-  {k:"&lt;C-M-h/j/k/l&gt;", d:"Same window move (tmux-forwarded chords)", g:"Windows", m:"n/t"},
+  {k:"&lt;C-\\&gt;", d:"Toggle the floating terminal (floaterm)", g:"Terminal", m:"n/t"},
+  {k:"&lt;Esc&gt;&lt;Esc&gt;", d:"Leave terminal mode (select + y to copy)", g:"Terminal", m:"t"},
+  {k:"&lt;C-v&gt;", d:"Paste clipboard into the terminal", g:"Terminal", m:"t"},
+  {k:"&lt;C-h&gt; / &lt;C-j&gt; / &lt;C-k&gt;", d:"floaterm: sidebar / next / previous terminal", g:"Terminal", m:"t"},
+  {k:"&lt;C-h/j/k/l&gt;", d:"Move between splits / tmux panes", g:"Windows", m:"n"},
+  {k:"&lt;leader&gt;\\", d:"Jump to the previous split / tmux pane", g:"Windows", m:"n"},
+  {k:"&lt;C-M-h/j/k/l&gt;", d:"Same window move (tmux-forwarded chords)", g:"Windows", m:"n"},
   // sessions
   {k:"&lt;leader&gt;wr / ws", d:"Restore / save session", g:"Session", m:"n"},
   // completion (insert)

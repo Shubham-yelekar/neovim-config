@@ -17,7 +17,9 @@ vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]]) -- Delete without yanking
 
 vim.keymap.set("i", "<C-c>", "<Esc>") -- Use Ctrl+C as Escape
 
--- Window navigation (also works from toggleterm via TermOpen maps)
+-- Window navigation. Not mapped in terminal mode: floaterm is a floating
+-- window, so there is no neighbour to move to, and it binds Ctrl+hjk itself
+-- (sidebar, and cycling between terminals).
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Window left" })
 vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Window down" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Window up" })

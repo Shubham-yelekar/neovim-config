@@ -8,10 +8,10 @@ Two machines, two stacks. They used to share WezTerm + Neovim. They don't anymor
 ```
 mac/   nvim, ghostty, tmux, zsh, fastfetch
 win/   nvim, wezterm, powershell, fastfetch
-docs/  Neovim keymap/plugin reference (Mac nvim), Claude Code notes
+docs/  Neovim keymap/plugin reference (Mac nvim, Windows differences noted), Claude Code notes
 ```
 
-The two `nvim/` trees are deliberate copies, not a shared config. Same keymaps and plugins; `win/nvim` drops the tmux bits (vim-tmux-navigator, the Ctrl+Alt+hjkl chords) and points toggleterm at PowerShell. Change one, port to the other by hand.
+The two `nvim/` trees are deliberate copies, not a shared config. Same keymaps and plugins; `win/nvim` drops the tmux bits (vim-tmux-navigator, the Ctrl+Alt+hjkl chords), keeps smear-cursor on, and sets the shell to Git Bash for floaterm. Change one, port to the other by hand.
 
 ## Mac
 
@@ -53,7 +53,7 @@ Need a Nerd Font. Ghostty is set to `Maple Mono NF`; install that (or change `ma
 
 Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in `~/Developer` and lets tmux own tabs/panes. Bloom + modified-retro shaders are on; others are commented in `mac/ghostty/modules/shaders.config`.
 
-📖 **Mac nvim + tmux reference:** [`docs/index.html`](docs/index.html)
+📖 **nvim + tmux reference:** [`docs/index.html`](docs/index.html)
 
 🤖 **Claude Code on this Mac** — install, billing, limits, commands: [`docs/claude-code-mac.md`](docs/claude-code-mac.md)
 
@@ -88,6 +88,8 @@ New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\WindowsPowerShel
   Set-Content "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" -Encoding utf8
 ```
 
+nvim's floating terminal (`Ctrl+\`) runs **Git Bash**, so Git for Windows must be installed (`winget install Git.Git`). `win/nvim/lua/shubu/core/options.lua` looks for it under `Program Files`, `Program Files (x86)` and `%LOCALAPPDATA%\Programs\Git`; if none exist, nvim keeps cmd.exe.
+
 WezTerm loads the bundled JetBrainsMono Nerd Font from `win/wezterm/font/` and starts PowerShell so the profile (oh-my-posh, zoxide, eza, fzf pickers) actually runs.
 
 ## Notes
@@ -97,4 +99,5 @@ WezTerm loads the bundled JetBrainsMono Nerd Font from `win/wezterm/font/` and s
 - **Blur is Windows-only in `win/wezterm`.** `win32_system_backdrop = "Acrylic"` needs `window_background_opacity` low enough for the backdrop to show. `macos_window_background_blur` in that file is leftover and unused on Windows.
 - **fastfetch's chafa logo** is flaky on the winget build; same config draws the image on macOS.
 - `mac/nvim/lazy-lock.json` and `win/nvim/lazy-lock.json` pin Neovim plugins per machine. Commit after `:Lazy update`.
+- **Terminal in nvim is floaterm on both machines** (toggleterm is gone). `Ctrl+\` toggles it, `Esc Esc` leaves terminal mode, and `Ctrl+h` opens its terminal list. On Mac, vim-tmux-navigator's default maps are off because its `Ctrl+\` took over the toggle. "Previous pane" is now `<leader>\` (plain `<C-w>p` on Windows).
 - tmux plugins live in `~/.config/tmux/plugins/` and are gitignored. Reinstall with TPM on a new Mac.

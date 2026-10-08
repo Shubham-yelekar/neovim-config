@@ -26,6 +26,9 @@ vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Window left" })
 vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Window down" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Window up" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Window right" })
+-- Jump back to the last split. Same key as mac/nvim, where <C-\> belongs to
+-- floaterm and vim-tmux-navigator's "previous" was moved here.
+vim.keymap.set("n", "<leader>\\", "<C-w>p", { desc = "Previous window" })
 
 vim.keymap.set("n", "Q", "<nop>") -- Disable Ex mode
 
