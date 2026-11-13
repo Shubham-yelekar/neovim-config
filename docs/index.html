@@ -376,7 +376,7 @@ scripts/                   &larr; pane-nav, popup-term, open-url, clipboard</cod
       <h3>Scratch popup</h3>
       <p><kbd>Ctrl-grave</kbd> (the backtick key). Ghostty sends a CSI-u sequence so tmux receives it as Ctrl+grave. Opens a floating shell in the pane's directory; press again to detach so jobs keep running. Sessions are named <code>popup-*</code>.</p>
       <h3>Copy mode (Prefix v)</h3>
-      <p>Vi keys. <code>v</code> select, <code>C-v</code> block, <code>y</code> yank and stay, <code>Enter</code> yank and leave, <code>Y</code> yank line. <code>[</code> / <code>]</code> jump between shell prompts.</p>
+      <p>Vi keys. <code>v</code> select, <code>C-v</code> block, <code>y</code> yank and stay, <code>Enter</code> yank and leave, <code>Y</code> yank line. <code>[</code> / <code>]</code> jump between shell prompts. <code>C-e</code> / <code>C-y</code> scroll down / up 5 lines.</p>
     `
   }
 ];
@@ -554,7 +554,8 @@ vim.lsp.config("lua_ls", { settings = { Lua = {
       ["&lt;leader&gt;hR","Reset whole buffer"],["&lt;leader&gt;hu","Undo stage hunk"],
       ["&lt;leader&gt;hp","Preview hunk"],["&lt;leader&gt;hb","Blame line (full)"],
       ["&lt;leader&gt;hB","Toggle inline line blame"],
-      ["&lt;leader&gt;hd","Diff this file"],["ih <span class='mode-pill'>o/x</span>","Select hunk (text object)"]
+      ["&lt;leader&gt;hd","Diff this file"],["&lt;leader&gt;hD","Diff this file against the previous commit (~)"],
+      ["ih <span class='mode-pill'>o/x</span>","Select hunk (text object)"]
     ],
     code:`map("n", "<leader>hp", gs.preview_hunk, "Preview hunk")
 map("n", "<leader>hb", function() gs.blame_line({ full = true }) end, "Blame line")` },
@@ -699,7 +700,10 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())` },
     body:`<p>Remembers which files/splits you had open in a directory, so you can reopen a project exactly where you left off. Auto-restore is off here — you save/restore on demand.</p>`,
     keymaps:[
       ["&lt;leader&gt;wr","Restore the session for this folder"],
-      ["&lt;leader&gt;ws","Save the current session"]
+      ["&lt;leader&gt;ws","Save the current session"],
+      ["&lt;leader&gt;wf","Find a session (picker over all saved sessions, &lt;C-d&gt; deletes)"],
+      ["&lt;leader&gt;wd","Delete a session (picker)"],
+      ["&lt;leader&gt;wt","Toggle session auto-save"]
     ],
     code:`auto_session.setup({ auto_restore_enabled = false })` },
 
@@ -888,6 +892,7 @@ const KEYMAPS = [
   {k:"&lt;leader&gt;hp", d:"Preview hunk", g:"Git", m:"n"},
   {k:"&lt;leader&gt;hb", d:"Blame line", g:"Git", m:"n"},
   {k:"&lt;leader&gt;hd", d:"Diff this file", g:"Git", m:"n"},
+  {k:"&lt;leader&gt;hD", d:"Diff this file against ~", g:"Git", m:"n"},
   // format / lint
   {k:"&lt;leader&gt;mp", d:"Format file / selection", g:"Format", m:"n/v"},
   {k:"&lt;leader&gt;tf", d:"Toggle format-on-save", g:"Format", m:"n"},
@@ -913,6 +918,8 @@ const KEYMAPS = [
   {k:"&lt;C-M-h/j/k/l&gt;", d:"Same window move (tmux-forwarded chords)", g:"Windows", m:"n"},
   // sessions
   {k:"&lt;leader&gt;wr / ws", d:"Restore / save session", g:"Session", m:"n"},
+  {k:"&lt;leader&gt;wf / wd", d:"Find / delete session (picker)", g:"Session", m:"n"},
+  {k:"&lt;leader&gt;wt", d:"Toggle session auto-save", g:"Session", m:"n"},
   // completion (insert)
   {k:"&lt;C-j&gt; / &lt;C-k&gt;", d:"Completion: next / prev item", g:"Completion", m:"i"},
   {k:"&lt;C-Space&gt;", d:"Trigger completion", g:"Completion", m:"i"},

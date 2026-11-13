@@ -37,17 +37,23 @@ Native installer wins here. Auto-update is worth more than brew consistency on a
 machine I'm learning on, and a newly released model sometimes needs a newer
 Claude Code than the stable channel serves.
 
+> **Current state:** this Mac is actually on the Homebrew cask
+> (`/opt/homebrew/bin/claude`), so it does not auto-update — run
+> `brew upgrade claude-code` by hand, or switch to the native installer
+> (`brew uninstall --cask claude-code`, then the `curl` line above).
+
 ### PATH
 
-The installer does not reliably add `~/.local/bin` to PATH — it silently didn't
+Only needed for the native installer — Homebrew's `/opt/homebrew/bin` is already
+on PATH. The installer does not reliably add `~/.local/bin` to PATH — it silently didn't
 on Windows. Add it to the Claude Code section of [`../mac/zsh/.zshrc`](../mac/zsh/.zshrc):
 
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Because `.zshrc` is in this repo, that's committed once and every future Mac is
-covered. The Windows registry PATH is not portable like that.
+Not in `.zshrc` yet, because this Mac is on Homebrew. Once it's added there,
+it's committed once and every future Mac is covered. The Windows registry PATH is not portable like that.
 
 ### Verify
 
@@ -85,7 +91,10 @@ in this repo:
 matter how the process was launched. The `claude()` wrapper function in `.zshrc`
 only covers interactive shells — **Neovim spawns the binary directly, so the
 wrapper never runs and nvim integration gets no key.** Keep the wrapper if you
-like, but `apiKeyHelper` is what makes `<leader>Ac` work.
+like, but `apiKeyHelper` is what makes any nvim integration work.
+
+> **Current state:** `~/.claude/settings.json` has no `apiKeyHelper` yet — only
+> the `.zshrc` wrapper is set up.
 
 ## Subscription or API?
 
@@ -270,9 +279,11 @@ inherit the session model, so Opus subagents get expensive fast.
 
 ### Neovim
 
-See [`../mac/nvim/lua/shubu/plugins/claudecode.lua`](../mac/nvim/lua/shubu/plugins/claudecode.lua).
-Keymaps are under `<leader>A`, **not** the upstream default `<leader>a` — that's
-Harpoon add here. Requires `snacks.nvim`, which lazy pulls in automatically.
+**Not set up yet** — there is no Claude Code plugin in `mac/nvim/`. If one is
+added (e.g. `coder/claudecode.nvim`), put its keymaps under `<leader>A`, **not**
+the upstream default `<leader>a` — that's Harpoon add here
+([`harpoon.lua`](../mac/nvim/lua/shubu/plugins/harpoon.lua)). It also needs
+`apiKeyHelper` configured (see [Auth](#auth--api-key-via-keychain)).
 
 ## Notes
 

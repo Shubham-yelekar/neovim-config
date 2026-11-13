@@ -26,7 +26,7 @@ The two `nvim/` trees are deliberate copies, not a shared config. Same keymaps a
 Mac shell is zsh. Windows shell is PowerShell. They are separate files — the PowerShell profile only *imitates* a few zsh habits (eza, zoxide, history search).
 
 ```sh
-brew install neovim ghostty tmux fastfetch eza zoxide fzf fd chafa \
+brew install neovim ghostty tmux fastfetch eza zoxide fzf fd ripgrep lazygit chafa \
              zsh-autosuggestions zsh-syntax-highlighting
 # oh-my-zsh + powerlevel10k still install separately:
 #   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -51,7 +51,7 @@ git clone --depth=1 --single-branch --no-tags \
 
 Need a Nerd Font. Ghostty is set to `Maple Mono NF`; install that (or change `mac/ghostty/modules/appearance.config`).
 
-Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in `~/Developer` and lets tmux own tabs/panes. Bloom + modified-retro shaders are on; others are commented in `mac/ghostty/modules/shaders.config`.
+Ghostty launches `mac/ghostty/scripts/launch.sh`, which starts a login shell in `~/Developer` and lets tmux own tabs/panes. Cursor-smear, bloom and modified-retro shaders are on; others are commented in `mac/ghostty/modules/shaders.config`.
 
 📖 **nvim + tmux reference:** [`docs/index.html`](docs/index.html)
 
